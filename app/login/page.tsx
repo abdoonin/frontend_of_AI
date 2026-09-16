@@ -97,6 +97,22 @@ export default function LoginPage() {
         <div className={styles.page}>
             <ThemeToggle className={styles.themeToggle} />
             <main className={styles.card}>
+                <figure className={styles.art}>
+                    <div className={styles.artContent}>
+                        <h2 className={styles.artTitle}>Empowering Clinical Decisions</h2>
+                        <p className={styles.artDescription}>
+                            Hepatiq is a state-of-the-art AI platform designed to assist healthcare professionals in diagnosing and monitoring liver diseases with unprecedented accuracy.
+                        </p>
+                        <ul className={styles.artFeatures}>
+                            <li>✨ AI-Driven Liver Disease Diagnosis</li>
+                            <li>📊 Comprehensive Patient Analytics</li>
+                            <li>⚡ Real-time Clinical Insights</li>
+                        </ul>
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/liver-720.webp" alt="" width={720} height={663} className={styles.artImage} />
+                </figure>
+
                 <section className={styles.formSide}>
                     <div className={styles.brand}>
                         <span className={styles.tile} aria-hidden="true">
@@ -107,9 +123,7 @@ export default function LoginPage() {
 
                     <h1 className={styles.title}>Sign in to Hepatiq</h1>
                     <p className={styles.sub}>
-                        Liver disease analysis using artificial intelligence
-                        <br />
-                        and patient monitoring.
+                        Welcome back! Please enter your details.
                     </p>
 
                     {/* role=alert so a failed sign-in is announced, never silent.
@@ -215,18 +229,6 @@ export default function LoginPage() {
 
                     <p className={styles.foot}>Northern Technical University - Team&nbsp;Diqa</p>
                 </section>
-
-                <figure className={styles.art}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/liver-720.webp" alt="" width={720} height={663} />
-                    <figcaption className={styles.caption}>
-                        Hepatiq turns complex clinical data into clear insights
-                        <br />
-                        that help clinicians identify potential
-                        <br />
-                        liver disease sooner.
-                    </figcaption>
-                </figure>
             </main>
         </div>
     )
