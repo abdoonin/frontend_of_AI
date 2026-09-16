@@ -1,5 +1,6 @@
 import Groq from "groq-sdk"
 import { type NextRequest, NextResponse } from "next/server"
+import { proxyToBackend } from "@/lib/api/proxy"
 
 /**
  * The assistant's backend.
@@ -129,15 +130,16 @@ const TOOLS = [
 ];
 
 async function fetchBackend(path: string, request: NextRequest) {
-  const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
-  const cookie = request.headers.get('cookie');
-  const headers = new Headers();
-  if (cookie) headers.set('cookie', cookie);
   try {
-    const res = await fetch(`${BACKEND_URL}${path}`, { headers, cache: 'no-store' });
-    if (!res.ok) return { error: `Backend returned status ${res.status}` };
-    return await res.json();
+    const res = await proxyToBackend(request, { path, method: 'GET', forwardBody: false });
+    const data = await res.json();
+    if (!res.ok) {
+      console.warn(`Backend returned status ${res.status} for ${path}:`, data);
+      return { error: data?.detail || `Backend returned status ${res.status}` };
+    }
+    return data;
   } catch (e: any) {
+    console.error(`FetchBackend failed for ${path}:`, e);
     return { error: e.message };
   }
 }
