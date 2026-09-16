@@ -1,0 +1,405 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   SIGN IN — ported from design/login.html, value for value.
+
+   Scoped as a CSS module because this screen is deliberately NOT built from
+   shadcn control defaults: the specimen uses 48px inputs and buttons with a
+   12px radius, where shadcn ships 36px at 8px. Forcing the primitives here
+   would miss the spec by 12px on every control.
+
+   The palette, surfaces, ink, lines, blur and motion tokens all come from
+   app/globals.css. Only the values specific to this screen live here.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  /* Local radius scale — login.html defines its own, larger than the system's
+     6/8/10/14. Deliberate: this screen has bigger controls than the app. */
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-art: 20px;
+  --r-shell: 32px;
+  --card-lift: 0 28px 70px -28px rgba(5, 31, 32, .42);
+}
+
+:global(.dark) .page {
+  --card-lift: 0 34px 80px -30px rgba(0, 0, 0, .85);
+}
+
+/* ── the card: reference proportions ──
+   1120px is 58% of FHD and 44% of 2K. The split is deliberately uneven:
+   widening a 50/50 card stretches the form column to ~450px, too long for an
+   input. The extra width goes to the illustration so the form stays ~380px. */
+.card {
+  width: 100%;
+  max-width: 1120px;
+  min-height: 620px;
+  display: grid;
+  grid-template-columns: 0.88fr 1.12fr;
+  border-radius: var(--r-shell);
+  overflow: hidden;
+  background: var(--surface);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--card-lift);
+}
+
+@media (max-width: 820px) {
+  .card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+}
+
+/* form sits LEFT — swapped from the reference */
+.formSide {
+  padding: 64px 64px 56px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 520px) {
+  .formSide {
+    padding: 36px 26px 32px;
+  }
+}
+
+/* THE THEME SWITCH BELONGS ON THIS SCREEN, not only behind a session. A judge
+   opens the deployed app on their own device and lands here; if the switch
+   lives in the shell, the one screen they see before signing in is the one
+   they cannot change. Parked on the page rather than in the card so it does
+   not compete with the wordmark for the top-left corner. */
+.themeToggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+/* THE SAME LOCKUP AS THE RAIL: a filled tile with the mark knocked out of it.
+   The login page had the bare mark on nothing while the shell had the tile, so
+   signing in changed the logo. 36px tile, mark at 74% of it — the numbers are
+   read from `components/shell/app-shell.tsx`, not re-chosen here. */
+.tile {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--logo-tile);
+}
+
+/* The mark is a flat single-colour shape on transparency, so it is applied as
+   a mask and filled with the logo token. Its own #006964 measures 2.62:1 on
+   the dark ground and would fail WCAG 1.4.11; masked, it is 8.9:1 on light and
+   7.6:1 on dark, from one asset. See PROJECT_STATE.md "Brand identity". */
+.mark {
+  width: 100%;
+  height: 100%;
+  flex: none;
+  background-color: var(--logo-mark);
+  -webkit-mask-size: 74%;
+  mask-size: 74%;
+  -webkit-mask-image: url(/icon-512.png);
+  mask-image: url(/icon-512.png);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.wordmark {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+
+.title {
+  font-size: 27px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin: 0 0 6px;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin: 0 0 30px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+
+.fieldWrap {
+  margin-bottom: 16px;
+}
+
+/* The peek button is positioned against the input alone, not the whole field.
+   Without this it would drop below the input as soon as a validation message
+   appears underneath. */
+.inputRow {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--field-border);
+  border-radius: var(--r-lg);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.input::placeholder {
+  color: var(--ink-muted);
+  opacity: .75;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.passwordInput {
+  padding-right: 48px;
+}
+
+/* Invalid state. Carried by border colour AND a message with an icon below --
+   never by colour alone. --critical is per-theme, so this reads correctly on
+   both grounds without an override. */
+.inputInvalid {
+  border-color: var(--critical);
+}
+
+.inputInvalid:focus {
+  border-color: var(--critical);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--critical) 40%, transparent);
+}
+
+.fieldError {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--critical);
+}
+
+.peek {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-family: inherit;
+  transition: color var(--dur) var(--ease);
+}
+
+.peek:hover {
+  color: var(--ink);
+}
+
+.peek:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.submit {
+  width: 100%;
+  height: 48px;
+  margin-top: 10px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  border: 0;
+  border-radius: var(--r-lg);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.submit:hover:not(:disabled) {
+  opacity: .9;
+}
+
+.submit:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.submit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* Not in the specimen — it had no error state. Uses the system's critical
+   token, and pairs the colour with an icon and text so the state is never
+   carried by colour alone. */
+.error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border-radius: var(--r-md);
+  background: color-mix(in oklab, var(--critical) 12%, transparent);
+  color: var(--critical);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.errorIcon {
+  flex: none;
+  margin-top: 1px;
+}
+
+.helper {
+  margin: 26px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ink-muted);
+}
+
+.foot {
+  margin-top: auto;
+  padding-top: 28px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* ── illustration sits RIGHT ──
+   The art panel is an object inside the card, not a half divided off it.
+   A 1px divider was tried and read as generic because it was doing no work --
+   the two sides already differ in fill. Insetting the panel and giving it its
+   own radius separates them by shape instead. */
+.art {
+  position: relative;
+  margin: 14px 14px 14px 0;
+  display: grid;
+  place-items: center;
+  padding: 34px;
+  border-radius: var(--r-art);
+  overflow: hidden;
+  background: var(--surface-chrome);
+}
+
+@media (max-width: 820px) {
+  .art {
+    margin: 14px 14px 0;
+    order: -1;
+    padding: 30px;
+  }
+}
+
+.art::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(58% 52% at 50% 46%,
+      color-mix(in oklab, var(--g-100) 70%, transparent), transparent 70%);
+}
+
+:global(.dark) .art::before {
+  background: radial-gradient(58% 52% at 50% 46%,
+      color-mix(in oklab, var(--g-700) 85%, transparent), transparent 70%);
+}
+
+.art img {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 26px 44px rgba(5, 31, 32, .30));
+}
+
+/* Line breaks are authored, not wrapped -- the three lines step down in length
+   so the block reads as a shape rather than a paragraph that ran out of room.
+   Below 900px the breaks are dropped and it wraps normally. */
+.caption {
+  position: relative;
+  margin-top: 26px;
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 22px;
+  color: var(--ink-muted);
+  max-width: none;
+  text-wrap: pretty;
+}
+
+@media (max-width: 900px) {
+  .caption {
+    max-width: 34ch;
+  }
+
+  .caption br {
+    display: none;
+  }
+}
+
+/* Full-screen session check. Kept from the previous implementation because it
+   is load-bearing: see LESSONS.md L-015 and L-022. */
+.loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.loadingText {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.escape {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.escape:hover {
+  color: var(--ink);
+}

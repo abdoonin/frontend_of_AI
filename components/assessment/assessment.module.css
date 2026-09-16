@@ -1,0 +1,343 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   ASSESSMENT — ported from design/analysis.html, value for value.
+
+   A CSS module rather than utility classes because the specimen's readouts,
+   range markers and step rail are bespoke, and because shadcn's control sizes
+   fight the spec in a few places (as they did on login).
+
+   Every colour, blur, radius and duration comes from app/globals.css. Nothing
+   here invents a value.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* TYPE SCALE: 12 / 14 / 16 only, plus the one documented 19px readout.
+   Measured against next-shadcn-admin-dashboard.vercel.app, whose card title
+   and description are BOTH 14px — hierarchy there comes from weight and
+   colour, not from a size ladder. An earlier version of this file used 13px in
+   six places, which is off-scale and reads as imprecision beside 14px
+   siblings.
+
+   Local geometry aliases, so the numbers read as the design system's scale
+   rather than as calc() noise at every use site. */
+.wrap {
+  --r-md: calc(var(--radius) - 2px);   /*  8px */
+  --r-lg: var(--radius);               /* 10px */
+  --r-card: calc(var(--radius) + 4px); /* 14px */
+  --r-pill: 999px;
+  display: block;
+}
+
+/* ── step rail ── */
+.steps { display: flex; align-items: center; flex-wrap: wrap; margin-bottom: 22px; }
+.step { display: flex; align-items: center; gap: 9px; padding: 6px 14px 6px 6px; }
+.dot {
+  width: 24px; height: 24px; flex: none; border-radius: var(--r-pill);
+  display: grid; place-items: center; font-size: 12px; font-weight: 600;
+  background: var(--surface-sunk); color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.lbl { font-size: 14px; line-height: 20px; color: var(--ink-muted); white-space: nowrap; }
+.stepDone .dot, .stepActive .dot { background: var(--brand); color: var(--brand-ink); }
+.stepDone .lbl { color: var(--ink); }
+.stepActive .lbl { color: var(--ink); font-weight: 600; }
+.sep { width: 26px; height: 1px; background: var(--line-strong); flex: none; }
+
+/* ── cards ──
+   NO backdrop-filter, decided 2026-08-10. The patients screens accidentally
+   shipped without one -- `backdrop-blur-[var(--blur)]` compiles to
+   `blur(blur(18px) saturate(180%))`, which is invalid, so the browser dropped
+   it -- and Ali picked that flatter surface over the frosted one. The patients
+   container is now the base every screen matches, so the frosting comes off
+   here rather than being bolted onto them. */
+.card {
+  background: var(--surface-wide);
+  border-radius: var(--r-card);
+  box-shadow: var(--glass-lift);
+  padding: 22px;
+  margin-bottom: 16px;
+}
+.head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.headText { flex: 1; min-width: 0; }
+.head h2 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px;
+           line-height: 22px; }
+.desc { font-size: 14px; line-height: 20px; color: var(--ink-muted); margin: 0; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px;
+  border-radius: var(--r-pill); font-size: 12px; font-weight: 500;
+  background: var(--surface-sunk); color: var(--ink-muted); white-space: nowrap;
+}
+
+/* ── presets ── */
+.presets {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 14px; margin-bottom: 18px;
+  border-radius: var(--r-card); background: var(--surface);
+  box-shadow: var(--glass-lift);
+}
+.presetLabel { font-size: 12px; color: var(--ink-muted); }
+
+/* ── fields ── */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+.field label { display: block; font-size: 14px; line-height: 20px; font-weight: 500;
+               color: var(--ink); margin-bottom: 6px; }
+.unit { float: right; font-size: 12px; line-height: 20px; font-weight: 400;
+        color: var(--ink-muted); }
+.field input, .field select {
+  width: 100%; height: 36px; padding: 0 12px; font: inherit; font-size: 14px;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--field-border); border-radius: var(--r-md);
+  box-shadow: var(--glass-lift);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--ring);
+}
+.field input::placeholder { color: var(--ink-muted); opacity: .65; }
+
+/* ── section headings inside the detailed form ── */
+/* Each section is wrapped in its own div, so `:first-of-type` matched EVERY
+   heading and killed the rule on all three -- which is why the sections ran
+   together. The first section is marked explicitly instead. */
+.sectionHead {
+  display: flex; align-items: baseline; gap: 10px;
+  margin: 30px 0 16px; padding-top: 22px; border-top: 1px solid var(--line);
+}
+.sectionHeadFirst { margin-top: 0; padding-top: 0; border-top: 0; }
+.sectionHead h3 { font-size: 14px; font-weight: 600; margin: 0; line-height: 20px; }
+
+.ready { display: flex; align-items: center; gap: 9px; font-size: 14px;
+         line-height: 20px; margin-top: 14px; }
+.ready::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--normal); }
+.readyNo { color: var(--ink-muted); }
+.readyNo::before { background: var(--caution); }
+
+/* ── actions. Primary leads, Back trails, identical size. ── */
+.actions {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line);
+}
+.hint { font-size: 12px; color: var(--ink-muted); }
+
+/* ── verdict banner ── */
+.verdict {
+  display: flex; flex-direction: column; gap: 16px; padding: 18px; margin-bottom: 16px;
+  border-radius: var(--r-card); background: var(--surface);
+  box-shadow: var(--glass-lift);
+}
+.verdictTop { display: flex; align-items: center; gap: 14px; }
+.vmark {
+  width: 44px; height: 44px; flex: none; border-radius: var(--r-pill);
+  display: grid; place-items: center;
+}
+.vmark svg { width: 22px; height: 22px; fill: none; stroke-width: 2;
+             stroke-linecap: round; stroke-linejoin: round; }
+/* BOTH OF THESE WERE UNSCOPED — plain `.vmark`, twice — so the second simply
+   overwrote the first and the healthy tick rendered in the critical red,
+   beside the words "No signs of liver disease". Scoped to their own verdict
+   now. The tick takes the brand green (Ali, 2026-08-12); the alert keeps the
+   critical red. */
+.verdictOk .verdictTop { display: flex; align-items: center; gap: 14px; }
+.verdictOk .vmark { background: color-mix(in oklab, var(--brand) 18%, transparent); color: var(--brand); }
+.verdictWarn .verdictTop { display: flex; align-items: center; gap: 14px; }
+.verdictWarn .vmark { background: color-mix(in oklab, var(--critical) 15%, transparent); color: var(--critical); }
+.verdict h2 { font-size: 16px; font-weight: 600; margin: 0 0 3px; }
+.verdict p { font-size: 14px; line-height: 20px; color: var(--ink-muted); margin: 0; }
+
+/* ── patient line ── */
+.patient { display: flex; align-items: baseline; gap: 8px; margin: 0 0 14px;
+           font-size: 12px; color: var(--ink-muted); }
+.patient b { font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+/* A drawn rule, not a glyph: "-" reads as a range between the two facts and
+   "|" never optically centres. */
+.patientRule { display: inline-block; width: 1px; height: 11px; background: var(--line-strong);
+               transform: translateY(1px); }
+
+/* ── readouts ──
+   No backdrop-filter here either. Nothing in this product frosts any more --
+   see the note on .card above. */
+.readouts {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 26px;
+  padding: 20px 22px; border-radius: var(--r-card); background: var(--surface);
+  box-shadow: var(--glass-lift);
+}
+@media (max-width: 900px) { .readouts { grid-template-columns: repeat(2, 1fr); } }
+
+/* 19px is off the 12/14/16/30 scale, deliberately: a numeric readout is a
+   distinct role, and 16 does not lead a grid of eight values. */
+.readout b { display: block; font-size: 19px; line-height: 24px; font-weight: 600;
+             font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.readoutName { display: block; font-size: 12px; line-height: 16px; color: var(--ink-muted); margin-top: 2px; }
+.readoutOut b { color: var(--critical); }
+
+.track { position: relative; height: 3px; margin-top: 10px; border-radius: 2px;
+         background: color-mix(in oklab, var(--normal) 34%, transparent); }
+.marker { position: absolute; top: -3px; width: 3px; height: 9px; border-radius: 2px;
+          background: var(--normal); transform: translateX(-50%); }
+.readoutOut .marker { background: var(--critical); }
+
+.status { display: block; min-height: 16px; font-size: 12px; line-height: 16px;
+          color: var(--ink-muted); margin-top: 6px; }
+.readoutOut .status { color: var(--critical); }
+
+/* One authored moment: the readouts arrive when the assessment returns. */
+.readout { animation: readoutIn .34s cubic-bezier(.16, 1, .3, 1) backwards;
+           animation-delay: calc(var(--i) * 26ms); }
+@keyframes readoutIn { from { opacity: 0; transform: translateY(5px); } }
+
+/* ── result rows ── */
+.rows {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface); border-radius: var(--r-card); box-shadow: var(--glass-lift);
+}
+.row { display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+       border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.rowLabel { flex: 1; min-width: 0; }
+.rowLabel b { display: block; font-size: 14px; line-height: 20px; font-weight: 500; }
+.rowLabel span { font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.rowValue { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rowSkipped .rowValue { color: var(--ink-muted); font-size: 14px; font-weight: 500; }
+
+.note { font-size: 12px; line-height: 18px; color: var(--ink-muted);
+        padding: 12px 14px; margin: 14px 0 0; border-radius: var(--r-lg);
+        background: var(--surface-sunk); }
+
+.error {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0 0 16px;
+  padding: 10px 12px; border-radius: var(--r-md); font-size: 14px; line-height: 20px;
+  background: color-mix(in oklab, var(--critical) 12%, transparent); color: var(--critical);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CHARTS
+
+   Built to the dataviz mark specs: thin marks, 4px rounded data-ends, a 2px
+   surface gap between adjacent fills, direct labels instead of a legend (one
+   series needs no legend box — the title names it), recessive tracks.
+
+   Every chart is ONE hue, --chart-fill. The three clinical colours appear
+   only as status, and never without their own label beside them.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.chart { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.chartHead { margin-bottom: 14px; }
+.chartHead h3 { font-size: 14px; line-height: 20px; font-weight: 600; margin: 0 0 2px; }
+.chartHead p { font-size: 12px; line-height: 16px; color: var(--ink-muted); margin: 0; }
+.chartNote { font-size: 12px; line-height: 16px; color: var(--ink-muted); margin: 12px 0 0; }
+
+/* ── confidence meter ── */
+.meterWrap { margin-top: 0; }
+/* Three rows on ONE alignment axis: label/value, the track, then the two end
+   labels. Nothing floats to a third position. */
+.meterHead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.meterLabel { font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.meterValue { font-size: 16px; line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* The 2px gap between the two fills is the surface showing through. */
+.meterTrack { display: flex; gap: 2px; height: 8px; border-radius: 4px; }
+.meterFill { height: 100%; border-radius: 4px; }
+.meterScale { display: flex; justify-content: space-between; margin-top: 7px;
+              font-size: 12px; line-height: 16px; color: var(--ink-muted);
+              font-variant-numeric: tabular-nums; }
+
+/* The .weigh* rules that used to live here built the feature-importance chart
+   out of hand-written divs. It is a Recharts chart now, so they are gone. */
+
+/* ── donut key ──
+   A donut has no axis to read categories off, so the segments are named
+   rather than left to colour alone. */
+.donutKey { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 12px;
+            font-size: 12px; line-height: 16px; color: var(--ink-muted);
+            font-variant-numeric: tabular-nums; }
+.donutKey span { display: inline-flex; align-items: center; gap: 6px; }
+.donutKey i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+
+/* ── results layout (screen 4) ──
+   The composition Ali specified: the results card holds one column, and the
+   three charts stack beside it — one wide, then two side by side.
+
+   Note this is a deliberate exception to the decision recorded in
+   PROJECT_STATE.md 5e, which rejected dashboard-style column splits for the
+   assessment screens. That rejection was about screens 1-3, which are a linear
+   TASK: fill this, see the result, continue. Screen 4 is not a task, it is
+   interpretation — several independent readings looked at together — which is
+   the genre those patterns were measured from in the first place. */
+/* The two columns are NOT symmetric, and that asymmetry is the whole point.
+
+   `align-items: stretch` made them equal by growing whichever was shorter — so
+   the moment the charts column was the taller one it padded the RESULTS CARD
+   instead, leaving a block of empty green under the buttons.
+
+   The results card sizes to its own content, always. The charts column is the
+   one allowed to stretch, so it still finishes level with the card whenever the
+   card is taller, which is the desktop case and the one that matters. */
+.resultsGrid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+               gap: 16px; align-items: start; }
+.resultsGrid > .card { margin-bottom: 0; }
+/* `align-self: stretch` is what makes the charts — and only the charts — grow
+   to meet the results card. They then split that height between them, so the
+   two lower ones finish level with it instead of leaving a ragged edge. The
+   flex chain further down is what lets them actually grow; a fixed chart
+   height would just reopen the gap lower down.
+
+   auto-rows rather than a fixed two-row template: when hepatitis did not run
+   there is no stage chart, and a template would hold an empty row open. */
+.resultsSide { display: grid; grid-auto-rows: minmax(0, 1fr); gap: 16px;
+               min-height: 0; align-self: stretch; }
+.resultsPair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+               gap: 16px; min-height: 0; }
+
+/* Each chart is its own surface now, so .chart drops the divider it used when
+   the three of them were stacked inside the results card. */
+/* --surface, not --surface-wide. The two differ by 4% alpha (.15 against .11
+   on dark), which is invisible on an empty card and very visible under a bar:
+   the same --chart-fill green read bright on Reports and dim here, and it was
+   the ground doing it, not the bar. Reports cards are --surface, so these are
+   too — Ali, 2026-08-12. */
+.chartCard { background: var(--surface);
+             border-radius: var(--r-card);
+             box-shadow: var(--glass-lift);
+             padding: 18px;
+             display: flex; flex-direction: column; min-height: 0; }
+.chartCard .chart { margin-top: 0; padding-top: 0; border-top: 0;
+                    display: flex; flex-direction: column; flex: 1; min-height: 0; }
+/* The plot absorbs the slack; head and note keep their intrinsic height.
+
+   NO `min-height: 0` here. It was, and it silently beat the chart's own
+   Tailwind `min-h-*` on specificity (0,2,1 against 0,1,0) — measured, a chart
+   asking for 180px was rendering at 128px, which is what made Recharts start
+   dropping axis labels. A flex child that must not shrink below its content
+   is exactly what min-height is for. */
+.chartCard .chart > [data-slot='chart'] { flex: 1; }
+
+/* A CARD USED OUTSIDE THE RESULTS GRID — the patient profile — MUST BE GIVEN A
+   HEIGHT, e.g. `h-[330px]`. Here the results grid supplies one by stretching;
+   nothing else does.
+
+   Costly to learn: ResponsiveContainer asks for `height: 100%`, which against
+   an auto-height ancestor resolves to auto. The card renders, the container
+   renders, and the plot measures zero — no wrapper, no svg, a correctly-sized
+   empty box that looks like a data problem and is not. `min-height` does NOT
+   satisfy it. `OutOfRange` fails first because it sets `aspect-auto`; the
+   other two limp along on ChartContainer's default aspect ratio. */
+
+/* The out-of-range chart carries no note under it — every row states its own
+   figure in words, so the sentence that used to sit there said nothing the
+   card had not already said. Removing it left ~28px of empty card below the
+   last bar and none above the first, which reads as the chart having slipped.
+   This puts half of it back on top so the plot sits centred in what remains. */
+.chartCard .chart > [data-slot='chart']:last-child { margin-top: 14px; }
+
+/* One column below the laptop breakpoint: side by side, each chart would be
+   under ~230px and the axis labels collapse. Heights go back to intrinsic
+   here — there is no tall neighbour left to match. */
+@media (max-width: 1023px) {
+  .resultsGrid { grid-template-columns: minmax(0, 1fr); }
+  .resultsSide { grid-auto-rows: auto; }
+  .chartCard { min-height: 260px; }
+}
+@media (max-width: 639px) {
+  .resultsPair { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,0 +1,669 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* next-themes sets `class="dark"` on <html>, so the variant matches descendants
+   of .dark. Unchanged from before -- it was already the right shape. */
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────
+   HEPATIQ DESIGN SYSTEM
+   Ported from design/design-system.html (approved 2026-08-08). That file is
+   the spec; the comments there record what each value was measured against.
+   Do not re-derive them here.
+
+   Three layers, in this order:
+     1. PALETTE   -- the specimen's own tokens, verbatim
+     2. BRIDGE    -- shadcn's semantic names repointed at layer 1
+     3. @theme    -- exposes layer 2 as Tailwind utilities
+
+   The bridge exists because shadcn and the specimen use several of the same
+   names for different things. The collisions and their resolutions are
+   commented at the point they occur.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── 1. PALETTE — the six source greens ── */
+  --g-900: #051F20;
+  --g-800: #0B2B26;
+  --g-700: #163832;
+  --g-600: #235347;
+  --g-300: #8EB69B;
+  --g-100: #DAF1DE;
+  --g-050: #F4FAF6;
+  --g-ground: #BFDCC7;
+
+  /* Clinical semantics, light. No single hex clears AA on both grounds, so
+     these are per-theme -- see LESSONS.md L-019.
+
+     --sem-normal RETUNED 2026-08-10, from #163832 (= --g-700).
+
+     THE OLD VALUE WAS A PALETTE GREEN, NOT A SEMANTIC ONE, and that was the
+     bug. Measured on light it read 10.45:1 -- contrast was never the problem.
+     The problem is that #163832 sits between --ink (#051F20) and --ink-muted
+     (#235347), so "No signs of liver disease" rendered as something
+     indistinguishable from ordinary body text. The one result a doctor most
+     wants to spot was the only clinical state with no colour of its own, while
+     caution and critical both read instantly.
+
+     #0D6E3C is chosen for CHROMA, not lightness: a saturated emerald that
+     cannot be mistaken for the desaturated sage the interface is built from.
+     Measured 5.25:1 on the lightest surface it lands on (#DDECE1), against 4.5
+     required. */
+  --sem-normal: #0D6E3C;
+  /* RETUNED 2026-08-10, from #755100. Ali: the brown-yellow has to go.
+
+     There is a real constraint behind that brown, and it is worth knowing
+     before anyone "fixes" this back toward a brighter amber: on a LIGHT
+     surface, any yellow or amber that clears 4.5:1 for text has to be dark,
+     and dark amber reads as brown. Measured on #DDECE1 -- amber-700 #B45309
+     is 4.10 and orange-700 #C2410C is 4.23, so both FAIL as text.
+
+     #A14700 is the compromise that holds: measured 5.02:1, and it is a burnt
+     orange rather than the olive #755100 was. The hue moved; the lightness
+     could not. */
+  --sem-caution: #A14700;
+  --sem-critical: #B3261E;
+
+  /* Surfaces. Thin on purpose: this is what makes them read as glass.
+     Raising them was tried and rejected -- separation improved on paper and
+     the frosted quality disappeared. */
+  --bg: var(--g-ground);
+  --surface: rgba(255, 255, 255, .30);
+  --surface-wide: rgba(255, 255, 255, .24);
+  --surface-solid: #D2E6D8;
+  --surface-chrome: rgba(255, 255, 255, .40);
+  --surface-sunk: rgba(5, 31, 32, .05);
+  --shell: rgba(255, 255, 255, .16);
+
+  /* Fields are the BRIGHTEST surface in light -- that lightness step is what
+     makes a field read as somewhere you type.
+
+     Retuned 2026-08-08 from #F4FCF7 (effectively white). White read as
+     disconnected from the rest of the system: the ladder now goes
+       pale mint field -> soft green panel -> dark green control,
+     rather than white -> green -> dark green. A 5-10% tint, not a green fill:
+     matching the panel would cost contrast and make controls feel heavy. */
+  --field: #E4F2E9;
+  /* Explicit rather than a color-mix. Measured, this is within 0.005 of the
+     old composited value (1.414:1 vs 1.409:1 against the card) -- the visible
+     change is the fill above, not this. */
+  --field-border: #A8CDBB;
+
+  --glass-stroke: rgba(255, 255, 255, .55);
+  --glass-stroke-wide: rgba(255, 255, 255, .48);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, .45);
+  /* Green-tinted, not neutral-dark: on a green ground a black shadow reads as
+     dirt, a tinted one reads as depth. */
+  --glass-lift: 0 10px 28px rgba(31, 78, 66, .13);
+
+  --ink: var(--g-900);
+  --ink-muted: var(--g-600);
+  --line: color-mix(in oklab, var(--g-600) 22%, transparent);
+  --line-strong: color-mix(in oklab, var(--g-600) 38%, transparent);
+
+  /* COLLISION 1 -- the brand green is --brand here, NOT --accent.
+     The specimen calls this --accent; shadcn uses --accent for its hover /
+     selected background across 42 call sites in components/ui. Dropping the
+     brand value into that name turns every hover state near-black green.
+     Renamed on both sides; design/ was updated to match. */
+  --brand: var(--g-600);
+  --brand-ink: var(--g-050);
+
+  /* The sidebar logo tile.
+     The mark used to be painted in --brand on nothing, so on light it was a
+     deep green shape on a pale rail and on dark a pale shape on a dark one --
+     two different logos. A filled tile with a knocked-out mark reads the same
+     in both, and it is what gives the wordmark something to sit against.
+
+     --g-600 in BOTH themes, deliberately: on dark, --brand is the pale sage
+     #8EB69B, and a tile that bright is a lamp in the corner of the rail. Ali
+     asked for something darker there; this is it, and it doubles as the one
+     place the two themes agree. Marks measured 8.27:1 light, 7.08:1 dark. */
+  --logo-tile: var(--g-600);
+  --logo-mark: var(--g-050);
+
+  --focus-ring: color-mix(in oklab, var(--g-600) 55%, transparent);
+  --blur: blur(18px) saturate(180%);
+  --blur-wide: blur(20px) saturate(175%);
+
+  --normal: var(--sem-normal);
+  --caution: var(--sem-caution);
+  --critical: var(--sem-critical);
+
+  /* The fill behind critical TEXT, and it has to be per-theme.
+     One expression cannot serve both: on light, more red makes the surface
+     DARKER and eats the dark-red text's contrast; on dark, more red makes it
+     darker too, which HELPS, because the text there is a light salmon. Measured
+     both ways at several strengths -- a single value always failed one theme.
+     Light therefore stays a faint wash over whatever is behind it; dark mixes
+     down into the ground. */
+  --critical-surface: color-mix(in oklab, var(--critical) 9%, transparent);
+
+  /* Charts are one green. Category is read from the label under each bar, so
+     colour carries no information and does not get a say. */
+  --chart-fill: var(--g-600);
+  /* RETUNED 2026-08-11, from var(--g-300) #8EB69B.
+
+     MEASURED IN THE BROWSER: #8EB69B against the card surface #D2E7D8 is
+     1.73:1, where WCAG 2.2 §1.4.11 requires 3:1 for a graphical mark. A donut
+     slice painted with it was, in plain terms, invisible on light — and the
+     value looked fine in the dark theme, where the same token resolves to
+     --g-100 at 10.94:1, which is how it survived this long.
+
+     #3F7A64 measures 3.95:1 on that surface and is still a clear step away
+     from --chart-fill #235347. It is a literal because THE PALETTE HAS NO
+     MID-TONE: it steps straight from g-600 to g-300, which is the same gap
+     that forced the brand from g-700 to g-600 in 2026-08-09. */
+  --chart-alt: #3F7A64;
+  --chart-quiet: color-mix(in oklab, var(--g-600) 38%, transparent);
+
+  /* ── geometry, measured from the Studio Admin dashboard ── */
+  --u: 4px;
+  --sidebar-w: 272px;
+  --h-ctl: 32px;
+  --h-ctl-sm: 28px;
+  --h-ctl-lg: 36px;
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --dur: .15s;
+
+  /* ── 2. BRIDGE — shadcn's names, repointed ── */
+
+  /* COLLISION 3 -- radius.
+     Was 0.75rem, deriving 8/10/12/16. At 0.625rem shadcn's own calc() chain
+     emits 6 / 8 / 10 / 14, which is the specimen scale exactly. No other
+     change needed, and the ~120 rounded-md/rounded-sm uses inherit it free. */
+  --radius: 0.625rem;
+
+  /*
+    The design system's radius scale, GLOBAL.
+    Until 2026-08-09 these lived only inside `components/assessment/
+    assessment.module.css` and `app/login/login.module.css`, so any component
+    outside those two files that wrote `rounded-[var(--r-card)]` got an invalid
+    value and fell back to SQUARE corners. That is what made the patients
+    screens read as boxy -- they were not 14px, they were 0.
+  */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-card: 14px;
+  /* Wider panels that hold a whole screen's worth of content. */
+  --r-panel: 24px;
+  --r-pill: 999px;
+
+  --background: var(--bg);
+  --foreground: var(--ink);
+
+  /* COLLISION 2a -- card is TRANSLUCENT. Only card.tsx and alert.tsx read it. */
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+
+  /* COLLISION 2b -- popover stays OPAQUE. Nine primitives render floating
+     layers off this (dropdown, select, command, calendar, context-menu,
+     menubar, navigation-menu, hover-card, popover). Frosted glass over
+     arbitrary page content is unreadable. */
+  --popover: var(--surface-solid);
+  --popover-foreground: var(--ink);
+
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-ink);
+
+  --secondary: var(--surface-sunk);
+  --secondary-foreground: var(--ink);
+
+  --muted: var(--surface-sunk);
+  --muted-foreground: var(--ink-muted);
+
+  /* shadcn's --accent is a quiet hover/selected tint. Deliberately NOT the
+     brand -- see COLLISION 1 above. */
+  --accent: color-mix(in oklab, var(--g-600) 12%, transparent);
+  --accent-foreground: var(--ink);
+
+  --destructive: var(--critical);
+  --destructive-foreground: var(--g-050);
+
+  --border: var(--line);
+  /* COLLISION 5 -- shadcn uses --input as a BORDER colour (`border-input`),
+     not a fill. The field fill is applied in input.tsx via --field. */
+  --input: var(--field-border);
+  --ring: var(--focus-ring);
+
+  --chart-1: var(--chart-fill);
+  --chart-2: var(--chart-alt);
+  --chart-3: var(--chart-quiet);
+  --chart-4: var(--g-700);
+  --chart-5: var(--g-100);
+
+  --sidebar: var(--surface-chrome);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-ink);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--focus-ring);
+
+  color-scheme: light;
+}
+
+.dark {
+  /* Per-theme by default. Every value below was checked on its own ground --
+     nothing is shared with light, and nothing is auto-inverted (L-019). */
+  --bg: var(--g-900);
+  --surface: rgba(142, 182, 155, .15);
+  --surface-wide: rgba(142, 182, 155, .11);
+  --surface-solid: #16322F;
+  --surface-chrome: rgba(142, 182, 155, .10);
+  --surface-sunk: rgba(218, 241, 222, .07);
+  --shell: rgba(142, 182, 155, .05);
+
+  /* Dark keeps a cool recessed field: a bright one glares on near-black. The
+     light theme's pale-mint retune does not apply here -- inverting it would
+     be exactly the auto-inversion CLAUDE.md section 7 forbids. */
+  --field: rgba(5, 31, 32, .45);
+  --field-border: rgba(142, 182, 155, .28);
+
+  --glass-stroke: rgba(218, 241, 222, .16);
+  --glass-stroke-wide: rgba(218, 241, 222, .13);
+  --glass-edge: inset 0 1px 0 rgba(218, 241, 222, .20);
+  --glass-lift: 0 14px 38px -20px rgba(0, 0, 0, .8);
+
+  --ink: var(--g-100);
+  --ink-muted: var(--g-300);
+  --line: rgba(142, 182, 155, .22);
+  --line-strong: rgba(142, 182, 155, .34);
+
+  --brand: var(--g-300);
+  --brand-ink: var(--g-900);
+  --logo-mark: var(--g-100);
+  --focus-ring: color-mix(in oklab, var(--g-300) 60%, transparent);
+
+  /* Clinical semantics, dark. Both of these were retuned 2026-08-10, and the
+     measurements are against #26443E -- the card and table-row surface, which
+     is the LIGHTEST ground any clinical text lands on here and therefore the
+     one that decides the ratio. The page ground #051F20 is darker and easier.
+
+     --normal WAS var(--g-300), WHICH IS THE SAME HEX AS --brand AND AS
+     --ink-muted. On dark, "healthy" was not a colour at all: it was byte-for-
+     byte the colour of secondary text. It measured 4.72:1 -- passing, and
+     completely mute. #63D297 keeps the green family, adds the chroma that
+     makes it read as a state, and measures 5.65:1.
+
+     --critical WAS #E8776B AND FAILED WCAG 2.2 AA. Measured 3.69:1 at 14px,
+     where 4.5 is required -- so "Liver scarring Stage 3" in the patients table
+     and every 14px critical readout was below the standard CLAUDE.md §7 sets.
+     It passed only at the 24px card figure, where 3:1 applies. #F0998F is the
+     same hue lifted until it clears the bar: 4.89:1.
+
+     --caution was measured at 5.43:1 and is unchanged. */
+  --normal: #63D297;
+  --critical-surface: color-mix(in oklab, var(--critical) 22%, var(--g-900));
+  /* #E8B04B was gold and read as the same family as the light theme's olive.
+     #F0A868 is the dark counterpart of #A14700 -- the same burnt orange lifted
+     until it clears the dark surface. Measured 5.31:1 on #26443E. */
+  --caution: #F0A868;
+  /* #F0998F cleared the bar and read as PINK -- the hue was lifted for
+     contrast until the chroma went with it. Ali, 2026-08-12: "it's like pink".
+     He asked for the light theme's #B3261E instead; measured on the card
+     surface (rgb 20,48,46) that is 2.15:1, worse than the #E8776B this section
+     already records as a failure, because a dark red on a near-black card is
+     the one thing that cannot work here.
+
+     #FF6B5A is the answer to what he actually wanted: vermilion rather than
+     salmon, far more saturated than #F0998F, and 5.03:1 on the same surface.
+     Saturation was the complaint; lightness was never the problem. */
+  --critical: #FF6B5A;
+
+  /* Briefly #3FAE72 on 2026-08-12, to answer "the green is washed out". Ali
+     saw it on the Reports screen against the rest of the palette and reverted
+     it the same day: the saturated green read as a different product from the
+     sage everything else in the dark theme is built from. Contrast was never
+     the question -- both clear the bar comfortably. */
+  --chart-fill: var(--g-300);
+  --chart-alt: var(--g-100);
+  --chart-quiet: color-mix(in oklab, var(--g-300) 34%, transparent);
+
+  --accent: color-mix(in oklab, var(--g-300) 14%, transparent);
+  --destructive-foreground: var(--g-900);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Clinical states, available as text-normal / bg-caution / border-critical.
+     These are the ONLY semantic colours in the system. Nothing else is ever
+     coloured -- see design/design-system.html. */
+  --color-normal: var(--normal);
+  --color-caution: var(--caution);
+  --color-critical: var(--critical);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+
+  /* Surfaces, for markup that needs a specific level rather than `card`. */
+  --color-surface: var(--surface);
+  --color-surface-wide: var(--surface-wide);
+  --color-surface-solid: var(--surface-solid);
+  --color-surface-chrome: var(--surface-chrome);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-field: var(--field);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);   /*  6px */
+  --radius-md: calc(var(--radius) - 2px);   /*  8px */
+  --radius-lg: var(--radius);               /* 10px */
+  --radius-xl: calc(var(--radius) + 4px);   /* 14px */
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BROWSER SURFACES
+
+   The parts we did not draw still carry the design. Scrollbars, the caret and
+   text selection ship with browser defaults belonging to no design system, and
+   they are the cheapest signal that a page was built rather than assembled.
+
+   `color-scheme` is set per theme on :root and .dark above — it is doing more
+   work than every rule here, because it is what makes the OS render scrollbars
+   and native controls in the right mode at all.
+
+   Both themes come free: every value below is a token that flips.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Firefox and Chrome 121+ */
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
+  /* Backstop for native controls we do not replace — checkbox, radio, range. */
+  accent-color: var(--brand);
+}
+
+/* Older WebKit. `background-clip: content-box` with a transparent border is
+   what insets the thumb without a wrapper element. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* A scroller with no visible bar.
+   The themed scrollbar above is the product default and stays that way. This
+   is the one deliberate exception: the assistant's message list scrolls and
+   auto-follows new turns, and a 10px rail down a conversation reads as chrome
+   inside what is meant to be a calm surface. Wheel, trackpad, keyboard and
+   touch are all untouched — only the rail is hidden. */
+.scroll-quiet { scrollbar-width: none; }
+.scroll-quiet::-webkit-scrollbar { width: 0; height: 0; }
+
+::selection { background: color-mix(in oklab, var(--brand) 26%, transparent); color: var(--ink); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   FLOATING LAYERS — select, dropdown, popover, command.
+
+   `--popover` is `--surface-solid`, deliberately opaque: frosted glass over
+   arbitrary page content is unreadable, which is why it diverges from `--card`
+   (Phase 3, collision 2). But fully flat and unlifted it reads as a grey wash
+   with none of the system's character.
+
+   92% of the solid surface plus the standard blur and lift keeps it legible
+   over any content while making it look like it belongs to the same material
+   as everything else. Both themes flip with the tokens.
+   ───────────────────────────────────────────────────────────────────────── */
+[data-slot="select-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="popover-content"],
+[data-slot="command"],
+[data-slot="context-menu-content"],
+[data-slot="menubar-content"],
+[data-slot="hover-card-content"] {
+  background: color-mix(in oklab, var(--surface-solid) 92%, transparent);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border-color: var(--line);
+  box-shadow: var(--glass-lift);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SIDEBAR — frost the chrome.
+
+   `--sidebar` is `--surface-chrome`, which is TRANSLUCENT (40% white on light,
+   10% sage on dark). shadcn paints it with `bg-sidebar` and no backdrop
+   filter, so without this the rail is a flat wash rather than frosted glass —
+   which is why it did not match the specimen in either theme. The specimen's
+   `.side` carries `backdrop-filter: var(--blur)`; so does this.
+
+   Targeted by data-slot rather than by passing a className, because the
+   translucent fill lives on `sidebar-inner` while `className` lands on
+   `sidebar-container` one level up. The mobile sheet gets the same treatment.
+   ───────────────────────────────────────────────────────────────────────── */
+[data-slot="sidebar-inner"],
+[data-slot="sidebar"][data-mobile="true"] {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* Every clinical value in this app is a number in a column. Tabular figures
+     are not optional -- CLAUDE.md section 7. */
+  input[type="number"],
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   GRADIENT MESH
+
+   Large, soft, overlapping pools -- not a flat fill with a hint of shading.
+   backdrop-filter can only refract VARIATION, so the richer the field behind
+   the glass, the more the surfaces read as floating rather than painted.
+
+   Two rules, both learned the hard way (LESSONS.md L-019, L-020):
+
+   1. Per theme, never shared. One rule dimmed for dark washed dark out --
+      white over near-black stays white.
+   2. On light, every pool ADDS light. Every contrast figure in the system is
+      computed against the base ground, so a darkening pool silently
+      invalidates them -- measured, one pushed caution to 3.84 and critical
+      to 3.50, both failing AA.
+   ───────────────────────────────────────────────────────────────────────── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(72rem 54rem at 2% -14%, rgba(255, 255, 255, .50), transparent 56%),
+    radial-gradient(50rem 40rem at 100% -6%, color-mix(in oklab, var(--g-100) 92%, transparent), transparent 56%),
+    /* Centre pool is MINT, not near-white. A near-white peak here glared, and
+       deleting it dropped the middle to the raw ground, which read as too
+       dark -- so the hue moved rather than the strength. See commit a27c89d. */
+    radial-gradient(64rem 46rem at 44% 40%, color-mix(in oklab, var(--g-100) 80%, transparent), transparent 60%),
+    radial-gradient(52rem 44rem at -8% 96%, color-mix(in oklab, var(--g-100) 70%, transparent), transparent 54%);
+  /* The fifth pool -- white at 42% in the bottom-right corner -- is gone. It
+     read as a glare rather than depth. Removing a pool only REMOVES light, so
+     every contrast figure measured against the base ground still holds; the
+     rule that pools may only add light (PROJECT_STATE, light-mesh rule 2) is
+     what makes deleting one safe and darkening one unsafe. */
+}
+
+.dark body::before,
+body:is(.dark *)::before {
+  background:
+    radial-gradient(64rem 48rem at 6% -10%, color-mix(in oklab, var(--g-700) 55%, transparent), transparent 58%),
+    radial-gradient(52rem 42rem at 98% 6%, color-mix(in oklab, var(--g-800) 70%, transparent), transparent 56%),
+    radial-gradient(56rem 46rem at 78% 104%, color-mix(in oklab, var(--g-700) 40%, transparent), transparent 54%);
+}
+
+/* Accessibility + low-end fallback: if the viewer has asked for reduced
+   transparency, or the browser cannot composite backdrop filters, every glass
+   surface becomes its opaque equivalent. Contrast is unchanged. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --surface: var(--surface-solid);
+    --surface-wide: var(--surface-solid);
+    --surface-chrome: var(--surface-solid);
+    --blur: none;
+    --blur-wide: none;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --surface: var(--surface-solid);
+    --surface-wide: var(--surface-solid);
+    --surface-chrome: var(--surface-solid);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LEGACY UTILITY NAMES — REDEFINED, NOT DELETED
+
+   These seven classes have 332 call sites across ~20 screens. Deleting them
+   would strip the styling off most of the app in one commit and require a
+   20-file diff, which CLAUDE.md section 8 forbids. Instead the NAMES survive
+   and the BODIES become the new design language, so every existing screen
+   adopts it at once.
+
+   The names retire per-screen as Phases 4-7 rebuild them. Do not add new
+   usages -- new markup uses tokens directly.
+
+   .glass and .gradient-border had zero call sites and are gone.
+   ───────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+  /* 93 uses. Was a white gradient with a border and a 32px black shadow. */
+  .gradient-card {
+    background: var(--surface);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    border: 0;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glass-lift);
+  }
+
+  .gradient-card-dark {
+    background: var(--surface);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    border: 0;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glass-lift);
+  }
+
+  /* 70 uses. Was a clipped gradient fill on text. Gradient type is exactly the
+     generic-AI-template register CLAUDE.md section 7 forbids, so this is now
+     plain ink -- the hierarchy comes from size and weight instead. */
+  .gradient-text {
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    -webkit-text-fill-color: currentColor;
+    color: var(--ink);
+  }
+
+  /* 64 uses. Flat brand fill. */
+  .gradient-primary {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  /* 6 uses. The page ground; the mesh comes from body::before. */
+  .gradient-bg {
+    background: var(--bg);
+  }
+
+  /* 60 uses. Was translateY(-4px) over 300ms with a 40px shadow -- far too
+     much movement. Motion here is minimal and purposeful. */
+  .hover-lift {
+    transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--glass-lift);
+  }
+
+  /* 36 uses. Was an infinite pulsing box-shadow on the logo. An animation that
+     never stops draws attention to itself permanently -- deliberately inert. */
+  .animate-glow {
+    animation: none;
+  }
+
+  /* 3 uses. Was a 6s infinite float. Same reasoning. */
+  .animate-float {
+    animation: none;
+  }
+}
