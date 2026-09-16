@@ -107,6 +107,7 @@ export function AiChatbot() {
   const [isLoading, setIsLoading] = useState(false)
   const [query, setQuery] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Save to localStorage whenever messages change
   useEffect(() => {
@@ -400,18 +401,26 @@ export function AiChatbot() {
       <div className="mt-4 flex flex-col gap-2">
         <div className="flex flex-wrap gap-2" dir="rtl">
           {[
-            'اعرض لي قائمة المرضى الخاصة بي',
-            'أريد حساب مؤشر FIB-4 لمريض',
-            'ما هي أحدث التحاليل المضافة؟',
-          ].map((prompt) => (
+            { label: 'قائمة مرضاي', text: 'اعرض لي قائمة المرضى الخاصة بي', direct: true },
+            { label: 'بيانات مريض برقم...', text: 'اعرض لي بيانات وسجل المريض برقم: ', direct: false },
+            { label: 'حساب FIB-4 للمريض...', text: 'احسب مؤشر FIB-4 للمريض برقم: ', direct: false },
+            { label: 'آخر تحاليل المريض...', text: 'ما هي آخر تحاليل وفحوصات المريض: ', direct: false },
+          ].map((item) => (
             <button
-              key={prompt}
+              key={item.label}
               type="button"
-              onClick={() => send(prompt)}
+              onClick={() => {
+                if (item.direct) {
+                  send(item.text)
+                } else {
+                  setInput(item.text)
+                  textareaRef.current?.focus()
+                }
+              }}
               disabled={isLoading}
               className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[12px] text-[var(--ink-muted)] shadow-sm transition-colors hover:bg-[var(--surface-chrome)] hover:text-[var(--ink)] disabled:opacity-50"
             >
-              {prompt}
+              {item.label}
             </button>
           ))}
         </div>
@@ -423,6 +432,7 @@ export function AiChatbot() {
           }}
         >
           <Textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {

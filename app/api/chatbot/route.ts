@@ -215,16 +215,28 @@ export async function POST(request: NextRequest) {
           
           let toolResult: any = {};
           
-          if (fnName === 'search_patients') {
-            const data = await fetchBackend('/patients', request);
+          if (fnName === 'search_patients' || fnName === 'get_patients') {
+            const data = await fetchBackend('/patients?status=all', request);
             if (data?.patients && Array.isArray(data.patients)) {
               let p = data.patients;
               if (args.query) {
-                const q = args.query.toLowerCase();
-                p = p.filter((x: any) => x.name.toLowerCase().includes(q) || String(x.patient_id).toLowerCase().includes(q));
+                const q = args.query.toLowerCase().trim();
+                p = p.filter((x: any) => 
+                  String(x.name || '').toLowerCase().includes(q) || 
+                  String(x.patient_id || '').toLowerCase().includes(q)
+                );
               }
               // Only return a summary to save tokens
-              toolResult = { count: p.length, patients: p.slice(0, 10).map((x: any) => ({ name: x.name, patient_id: x.patient_id, status: x.status, doctor: x.doctor_name })) };
+              toolResult = { 
+                count: p.length, 
+                patients: p.slice(0, 15).map((x: any) => ({ 
+                  name: x.name, 
+                  patient_id: x.patient_id, 
+                  status: x.status, 
+                  department: x.department,
+                  doctor: x.doctor_name 
+                })) 
+              };
             } else {
               toolResult = { error: 'Failed to fetch patients' };
             }
