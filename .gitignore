@@ -58,3 +58,6 @@ scripts/
 test_*.py
 commands.txt
 install-pnpm.ps1
+
+.vercel
+.env*.local

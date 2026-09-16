@@ -47,6 +47,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { CONTROL_CLASS } from '@/components/patients/data-table'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { useAuth } from '@/lib/auth-context'
 
 type Role = 'user' | 'assistant'
 
@@ -75,13 +78,58 @@ const isArabic = (text: string) =>
   /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/.test(text)
 
 const HISTORY_TURNS = 12
+const STORAGE_KEY = 'hepatiq_chat_messages'
 
 export function AiChatbot() {
-  const [messages, setMessages] = useState<Message[]>([newGreeting()])
+  const { user } = useAuth()
+  
+  // Initialize from localStorage if available, otherwise use newGreeting()
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          // Rehydrate Date objects
+          return parsed.map((m: any) => ({
+            ...m,
+            timestamp: new Date(m.timestamp)
+          }))
+        } catch {
+          return [newGreeting()]
+        }
+      }
+    }
+    return [newGreeting()]
+  })
+  
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [query, setQuery] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+
+  // Save to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+    }
+  }, [messages])
+
+  useEffect(() => {
+    if (user?.fullName) {
+      setMessages((prev) => {
+        if (prev.length === 1 && prev[0].id === 'greeting') {
+          return [
+            {
+              ...prev[0],
+              content: `Welcome Dr. ${user.fullName}. I am the Hepatiq assistant. Ask me about liver disease, what a set of blood results might mean, symptoms, or treatment options.`,
+            },
+          ]
+        }
+        return prev
+      })
+    }
+  }, [user?.fullName])
 
   useEffect(() => {
     const id = setTimeout(() => endRef.current?.scrollIntoView({ block: 'end' }), 60)
@@ -106,8 +154,10 @@ export function AiChatbot() {
   }
 
   function clearChat() {
-    setMessages([newGreeting()])
+    const greeting = [newGreeting()]
+    setMessages(greeting)
     setQuery('')
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(greeting))
     toast.success('Conversation cleared')
   }
 
@@ -140,7 +190,7 @@ export function AiChatbot() {
       const res = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: body, history }),
+        body: JSON.stringify({ message: body, history, doctorName: user?.fullName }),
         signal: controller.signal,
       })
       const data = await res.json().catch(() => null)
@@ -298,12 +348,14 @@ export function AiChatbot() {
                   >
                     <Bot className="size-[18px] text-[var(--ink)]" />
                   </span>
-                  <p
+                  <div
                     dir={isArabic(m.content) ? 'rtl' : 'ltr'}
-                    className="max-w-[80%] rounded-[var(--r-card)] bg-[var(--surface-chrome)] px-3.5 py-2.5 text-[14px] leading-[21px] whitespace-pre-line text-[var(--ink)]"
+                    className="prose prose-sm dark:prose-invert max-w-[80%] rounded-[var(--r-card)] bg-[var(--surface-chrome)] px-3.5 py-2.5 text-[14px] leading-[21px] text-[var(--ink)] marker:text-[var(--ink)]"
                   >
-                    {m.content}
-                  </p>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {m.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               ),
             )}
@@ -345,43 +397,62 @@ export function AiChatbot() {
         )}
       </div>
 
-      <form
-        className="mt-4 flex items-end gap-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          send(input)
-        }}
-      >
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            // Enter sends, Shift+Enter breaks the line. The hint that used to
-            // spell this out under the field is gone (Ali) — it is the
-            // convention every chat client already uses, and the placeholder
-            // is doing the explaining.
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              send(input)
-            }
+      <div className="mt-4 flex flex-col gap-2">
+        <div className="flex flex-wrap gap-2" dir="rtl">
+          {[
+            'اعرض لي قائمة المرضى الخاصة بي',
+            'أريد حساب مؤشر FIB-4 لمريض',
+            'ما هي أحدث التحاليل المضافة؟',
+          ].map((prompt) => (
+            <button
+              key={prompt}
+              type="button"
+              onClick={() => send(prompt)}
+              disabled={isLoading}
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[12px] text-[var(--ink-muted)] shadow-sm transition-colors hover:bg-[var(--surface-chrome)] hover:text-[var(--ink)] disabled:opacity-50"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+        <form
+          className="flex items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            send(input)
           }}
-          rows={1}
-          placeholder="Ask about liver disease, blood results, symptoms or treatment..."
-          aria-label="Message the assistant"
-          className="max-h-32 min-h-9 flex-1 resize-none py-2"
-          disabled={isLoading}
-        />
-        {/* Keeps its fill when disabled, stepped back — design rule 9. */}
-        <Button
-          type="submit"
-          size="sm"
-          className={`h-9 ${CONTROL_CLASS} disabled:opacity-100 disabled:bg-[color-mix(in_oklab,var(--brand)_55%,transparent)]`}
-          disabled={isLoading || !input.trim()}
         >
-          <Send />
-          Send
-        </Button>
-      </form>
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter sends, Shift+Enter breaks the line. The hint that used to
+              // spell this out under the field is gone (Ali) — it is the
+              // convention every chat client already uses, and the placeholder
+              // is doing the explaining.
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                send(input)
+              }
+            }}
+            rows={1}
+            placeholder="Ask about liver disease, blood results, symptoms or treatment..."
+            aria-label="Message the assistant"
+            className="max-h-32 min-h-9 flex-1 resize-none py-2"
+            disabled={isLoading}
+          />
+          {/* Keeps its fill when disabled, stepped back — design rule 9. */}
+          <Button
+            type="submit"
+            size="sm"
+            className={`h-9 ${CONTROL_CLASS} disabled:bg-[color-mix(in_oklab,var(--brand)_55%,transparent)] disabled:opacity-100`}
+            disabled={isLoading || !input.trim()}
+          >
+            <Send />
+            Send
+          </Button>
+        </form>
+      </div>
     </section>
   )
 }

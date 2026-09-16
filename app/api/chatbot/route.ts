@@ -68,41 +68,79 @@ function getGroqClient(): Groq | null {
  */
 const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
 
-const SYSTEM_PROMPT = `You are an expert AI Liver Disease Diagnostic Assistant specializing in hepatology and liver health.
+const SYSTEM_PROMPT = `You are an expert AI Liver Disease Diagnostic Assistant for the "Hepatiq" (MediAI) platform, developed by Northern Technical University - Team Diqqa (الجامعة التقنية الشمالية - فريق دقة).
 
-YOUR EXPERTISE:
-• Advanced knowledge of liver anatomy, physiology, and pathology
-• Interpretation of liver function tests (ALT, AST, bilirubin, GGT, ALP, albumin, etc.)
-• Diagnosis and management of all liver diseases including:
-  - Viral hepatitis (A, B, C, D, E)
-  - Alcoholic liver disease
-  - Non-alcoholic fatty liver disease (NAFLD)
-  - Autoimmune hepatitis
-  - Primary biliary cholangitis
-  - Primary sclerosing cholangitis
-  - Drug-induced liver injury
-  - Liver cirrhosis and complications
-  - Liver cancer (HCC)
-  - Acute liver failure
-  - Liver transplantation
+ABOUT THE PROJECT (HEPATIQ / منصة هيباتيك):
+When the user asks about the project (e.g. "عرفني عن هذا المشروع", "ما هي فكرة المشروع", "ما هو هذا النظام", "ما فائدة المنصة", "What is this project?", "Tell me about Hepatiq"):
+You must provide a structured, inspiring, and clear summary of the project and highlight its key features:
 
-YOUR CAPABILITIES:
-• Analyze lab results and provide diagnostic insights
-• Explain liver conditions in clear, understandable terms
-• Provide evidence-based treatment recommendations
-• Answer questions about liver health, symptoms, and prevention
-• Guide patients through diagnostic processes
-• Explain medical terminology related to liver disease
-• Provide lifestyle and dietary advice for liver health
+1. فكرة المشروع (Project Overview):
+   منصة Hepatiq (المعروفة بـ MediAI) هي منظومة طبية ذكية وسريرية متقدمة مدعومة بالذكاء الاصطناعي، صُممت خصيصاً لمساعدة الأطباء ومقدمي الرعاية الصحية في تقييم وتشخيص أمراض الكبد بدقة وسرعة فائقة، ودعم اتخاذ القرار الإكلينيكي بناءً على نتائج التحاليل المخبرية والمؤشرات الحيوية للمريض. تم تطوير المشروع بجهود وإشراف فريق (دِقّة - Team Diqqa) من الجامعة التقنية الشمالية (Northern Technical University).
 
-IMPORTANT GUIDELINES:
-• Always provide accurate, evidence-based information
-• Use clear, non-technical language when possible
-• Include relevant medical context and explanations
-• Suggest appropriate follow-up actions
-• Recommend consulting healthcare professionals for diagnosis and treatment
+2. أهم مميزات المنصة (Key Features):
+   • التقييم والتشخيص المتعدد بالذكاء الاصطناعي (AI-Powered Multi-Disease Diagnosis): تحليل مخبري دقيق وفوري عبر نماذج تعلم الآلة المتقدمة للكشف عن وتصنيف حالات أمراض الكبد: تليف الكبد (Cirrhosis)، التهاب الكبد الفيروسي (Hepatitis C)، الكبد الدهني (Fatty Liver / NAFLD)، وسرطان الكبد (HCC)، مع بيان نسبة الثقة (Confidence Score) ومستوى الخطورة السريرية (Risk Level).
+   • الحساب التلقائي للمعادلات والمؤشرات الطبية (Automated Clinical Biomarkers): حساب وتفسير فوري لمؤشرات تليف الكبد غير الجراحية المعتمدة عالمياً مثل APRI Score، FIB-4 Index، ونسبة AST/ALT.
+   • إدارة ملفات وسجلات المرضى (Patient Management & Clinical Records): أرشفة وتنظيم شامل لسجلات المرضى، وتتبع التطور الزمني للتحاليل المخبرية واستجابة الكبد للعلاج.
+   • تقارير طبية وتوصيات إكلينيكية (Comprehensive Clinical Reports): توليد تقارير طبية مفصلة قابلة للمراجعة والتصدير، مزودة بإرشادات وتوصيات سريرية قائمة على الأدلة لدعم خطة العلاج والمتابعة.
+   • المساعد الذكي التفاعلي (Interactive Clinical AI Assistant): محادثة ذكية فورية تدعم اللغتين العربية والإنجليزية لتفسير الفحوصات الطبية، تقديم استشارات وتوجيهات، وشرح المصطلحات الطبية.
+   • أمان البيانات والصلاحيات المتقدمة (Security & Role-Based Access): نظام تحكم صارم بالصلاحيات (أطباء وإداريون) لحماية خصوصية بيانات المرضى وسجلات التدقيق (Audit Logs).
 
-Respond professionally and helpfully to liver-related medical questions.`
+YOUR MEDICAL EXPERTISE & CAPABILITIES:
+• Advanced knowledge of liver anatomy, physiology, and pathology.
+• Interpretation of liver function tests (ALT, AST, Bilirubin, GGT, ALP, Albumin, Platelets, etc.).
+• Explaining medical conditions, terminology, lab results, and evidence-based clinical insights clearly in the user's preferred language (Arabic or English).
+• Providing healthy lifestyle, nutritional, and preventative guidance for liver health.
+
+COMMUNICATION & LANGUAGE GUIDELINES:
+• If the user writes or asks in Arabic, respond in fluent, professional, and elegant Arabic (لغة عربية سليمة وواضحة).
+• If the user writes in English, respond in English.
+• Keep formatting clean and readable with bullet points and bold highlights.
+• Always maintain a respectful, empathetic, and professional clinical tone.
+• When providing medical advice, remind users that AI assessments are designed to support and assist clinical decisions and not to replace a specialized physician's evaluation.`
+
+const TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'search_patients',
+      description: 'Search for patients by name or ID. Use this when the user asks about a patient but you need to find their exact patient_id first, or when they ask for a list of patients.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Name or patient_id to search for. If empty, returns all patients.' }
+        }
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_patient_records',
+      description: 'Retrieve lab tests, diagnoses, and medical reports for a specific patient. MUST provide the patient_id (string).',
+      parameters: {
+        type: 'object',
+        properties: {
+          patient_id: { type: 'string', description: "The hospital's patient_id string (NOT the numeric id)." }
+        },
+        required: ['patient_id']
+      }
+    }
+  }
+];
+
+async function fetchBackend(path: string, request: NextRequest) {
+  const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
+  const cookie = request.headers.get('cookie');
+  const headers = new Headers();
+  if (cookie) headers.set('cookie', cookie);
+  try {
+    const res = await fetch(`${BACKEND_URL}${path}`, { headers, cache: 'no-store' });
+    if (!res.ok) return { error: `Backend returned status ${res.status}` };
+    return await res.json();
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
 
 /** Keep only what we recognise, trim it, and cap how far back it goes. */
 function sanitiseHistory(raw: unknown): ChatTurn[] {
@@ -127,7 +165,7 @@ function fail(status: number, error: string, retryable: boolean) {
 }
 
 export async function POST(request: NextRequest) {
-  let body: { message?: unknown; history?: unknown }
+  let body: { message?: unknown; history?: unknown; doctorName?: string }
   try {
     body = await request.json()
   } catch {
@@ -142,21 +180,83 @@ export async function POST(request: NextRequest) {
     return fail(503, "The assistant is not configured: GROQ_API_KEY is not set.", false)
   }
 
-  const messages = [
-    { role: "system" as const, content: SYSTEM_PROMPT },
+  const doctorName = body.doctorName || "";
+  const doctorContext = doctorName ? `You are currently talking to Dr. ${doctorName}. Always address them by their name and focus on their patients.` : "";
+  const formatContext = `When presenting lab results or patient records, ALWAYS use Markdown tables for clarity. Use **bold** for critical values and abnormal results.`;
+
+  const messages: any[] = [
+    { role: "system", content: `${SYSTEM_PROMPT}\n\n${doctorContext}\n${formatContext}` },
     ...sanitiseHistory(body.history),
-    { role: "user" as const, content: message.slice(0, MAX_CHARS) },
+    { role: "user", content: message.slice(0, MAX_CHARS) },
   ]
 
-  /*
-    One retry, and only when the provider says the request is retryable. Groq
-    sends `retry-after` in seconds; anything longer than a few seconds is worth
-    telling the user about rather than holding the connection open. The old loop
-    slept 60s three times over.
-  */
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const completion = await groq.chat.completions.create({ messages, model: MODEL })
+      let completion = await groq.chat.completions.create({
+        messages,
+        model: MODEL,
+        tools: TOOLS as any,
+        tool_choice: "auto"
+      })
+
+      // Handle tool calls loop
+      while (completion.choices[0]?.message?.tool_calls) {
+        const messageToAppend = completion.choices[0].message;
+        messages.push(messageToAppend);
+        
+        for (const toolCall of messageToAppend.tool_calls || []) {
+          const fnName = toolCall.function.name;
+          let args: any;
+          try {
+            args = JSON.parse(toolCall.function.arguments || "{}");
+          } catch {
+            args = {};
+          }
+          
+          let toolResult: any = {};
+          
+          if (fnName === 'search_patients') {
+            const data = await fetchBackend('/patients', request);
+            if (data?.patients && Array.isArray(data.patients)) {
+              let p = data.patients;
+              if (args.query) {
+                const q = args.query.toLowerCase();
+                p = p.filter((x: any) => x.name.toLowerCase().includes(q) || String(x.patient_id).toLowerCase().includes(q));
+              }
+              // Only return a summary to save tokens
+              toolResult = { count: p.length, patients: p.slice(0, 10).map((x: any) => ({ name: x.name, patient_id: x.patient_id, status: x.status, doctor: x.doctor_name })) };
+            } else {
+              toolResult = { error: 'Failed to fetch patients' };
+            }
+          } else if (fnName === 'get_patient_records') {
+            const [patientData, analysesData] = await Promise.all([
+              fetchBackend(`/patients?patient_id=${encodeURIComponent(args.patient_id || '')}`, request),
+              fetchBackend(`/patient-analyses?patient_id=${encodeURIComponent(args.patient_id || '')}`, request)
+            ]);
+            
+            toolResult = { 
+              patient: patientData?.patients?.[0] || null, 
+              analyses: analysesData?.analyses || [] 
+            };
+          } else {
+            toolResult = { error: 'Unknown tool' };
+          }
+          
+          messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(toolResult)
+          });
+        }
+        
+        completion = await groq.chat.completions.create({
+          messages,
+          model: MODEL,
+          tools: TOOLS as any,
+          tool_choice: "auto"
+        })
+      }
+
       const answer = completion.choices[0]?.message?.content?.trim()
       if (!answer) return fail(502, "The assistant returned an empty response.", true)
 
@@ -168,7 +268,7 @@ export async function POST(request: NextRequest) {
       })
     } catch (error: any) {
       const status = error?.status ?? error?.response?.status
-      const retryAfter = Number(error?.headers?.["retry-after"]) || 0
+      const retryAfter = Number(error?.headers?.['retry-after']) || 0
 
       if (status === 429 && attempt === 0 && retryAfter > 0 && retryAfter <= 5) {
         await new Promise((r) => setTimeout(r, retryAfter * 1000))
