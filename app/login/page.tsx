@@ -3,7 +3,7 @@
 import React, { useRef, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
-import { Loader2, AlertCircle, Eye, EyeOff } from "lucide-react"
+import { Loader2, AlertCircle, Eye, EyeOff, Sparkles, LineChart, Zap } from "lucide-react"
 import styles from "./login.module.css"
 import { ThemeToggle } from "@/components/shell/theme-toggle"
 
@@ -97,22 +97,6 @@ export default function LoginPage() {
         <div className={styles.page}>
             <ThemeToggle className={styles.themeToggle} />
             <main className={styles.card}>
-                <figure className={styles.art}>
-                    <div className={styles.artContent}>
-                        <h2 className={styles.artTitle}>Empowering Clinical Decisions</h2>
-                        <p className={styles.artDescription}>
-                            Hepatiq is a state-of-the-art AI platform designed to assist healthcare professionals in diagnosing and monitoring liver diseases with unprecedented accuracy.
-                        </p>
-                        <ul className={styles.artFeatures}>
-                            <li>✨ AI-Driven Liver Disease Diagnosis</li>
-                            <li>📊 Comprehensive Patient Analytics</li>
-                            <li>⚡ Real-time Clinical Insights</li>
-                        </ul>
-                    </div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/liver-720.webp" alt="" width={720} height={663} className={styles.artImage} />
-                </figure>
-
                 <section className={styles.formSide}>
                     <div className={styles.brand}>
                         <span className={styles.tile} aria-hidden="true">
@@ -227,8 +211,33 @@ export default function LoginPage() {
                         access, contact them directly.
                     </p>
 
-                    <p className={styles.foot}>Northern Technical University - Team&nbsp;Diqa</p>
+                    <p className={styles.foot}>Northern Technical University - Team&nbsp;Diqqa</p>
                 </section>
+
+                <figure className={styles.art}>
+                    <div className={styles.artContent}>
+                        <h2 className={styles.artTitle}>Empowering Clinical Decisions</h2>
+                        <p className={styles.artDescription}>
+                            Hepatiq is a state-of-the-art AI platform designed to assist healthcare professionals in diagnosing and monitoring liver diseases with unprecedented accuracy.
+                        </p>
+                        <ul className={styles.artFeatures}>
+                            <li>
+                                <div className={styles.iconWrap}><Sparkles size={16} /></div>
+                                <span>AI-Driven Liver Disease Diagnosis</span>
+                            </li>
+                            <li>
+                                <div className={styles.iconWrap}><LineChart size={16} /></div>
+                                <span>Comprehensive Patient Analytics</span>
+                            </li>
+                            <li>
+                                <div className={styles.iconWrap}><Zap size={16} /></div>
+                                <span>Real-time Clinical Insights</span>
+                            </li>
+                        </ul>
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/liver-720.webp" alt="" width={720} height={663} className={styles.artImage} />
+                </figure>
             </main>
         </div>
     )
