@@ -2,33 +2,44 @@
 
 import { useRef } from 'react'
 import type { Preset } from '@/lib/assessment/presets'
-import { fieldsIn } from '@/lib/assessment/fields'
-import { GATE_KEYS, MODEL_LABEL, type ModelId } from '@/lib/assessment/models'
+import { FIELD_BY_KEY } from '@/lib/assessment/fields'
+import { MODEL_LABEL, type ModelId } from '@/lib/assessment/models'
 import type { AssessmentState } from '@/lib/assessment/use-assessment'
 import { btn, FieldGrid, PresetBar } from './parts'
 import s from './assessment.module.css'
 
-/**
- * Screen 3 — one form, three labelled sections, one submit.
- *
- * The three models were sub-tabs; they are sections now. They keep their
- * clinical identity and lose their role as navigation, which is what made the
- * old screen ambiguous — a clinician had to work out that each card opened its
- * own form, and choosing between them implied choosing the patient's disease.
- *
- * 20 further values, not 23: fatty liver and hepatitis share cholesterol,
- * triglycerides and platelets. `detailedKeys()` computes that.
- */
+interface AnalysisSectionConfig {
+  id: ModelId
+  title: string
+  subtitle: string
+  description: string
+  keys: readonly string[]
+  sharedNote?: string
+}
 
-/*
-  No "used for cancer risk" hint on the section headings. The readiness line
-  under each section already names the model it feeds, so the hint restated it
-  one line above — and the section titles are self-explanatory.
-*/
-const SECTIONS: { title: string; group: Parameters<typeof fieldsIn>[0]; model: ModelId }[] = [
-  { title: 'Lifestyle & history', group: 'lifestyle', model: 'cancer' },
-  { title: 'Laboratory values', group: 'labs', model: 'fatty_liver' },
-  { title: 'Physical signs', group: 'signs', model: 'hepatitis' },
+const ANALYSES: AnalysisSectionConfig[] = [
+  {
+    id: 'cancer',
+    title: 'Cancer risk',
+    subtitle: 'Lifestyle & history',
+    description: 'Evaluates cancer risk based on demographic factors, lifestyle habits, and genetic history.',
+    keys: ['bmi', 'smoking', 'alcohol', 'activity', 'genetic_risk', 'cancer_history'],
+  },
+  {
+    id: 'fatty_liver',
+    title: 'Fatty liver',
+    subtitle: 'Laboratory blood tests',
+    description: 'Evaluates hepatic steatosis and metabolic markers through lipid and enzyme profiles.',
+    keys: ['cholesterol', 'triglycerides', 'hdl', 'glucose', 'creatinine', 'ggt', 'uric_acid', 'platelets'],
+  },
+  {
+    id: 'hepatitis',
+    title: 'Hepatitis C',
+    subtitle: 'Staging tests & physical signs',
+    description: 'Evaluates liver scarring stage, complication risk, and physical clinical signs.',
+    keys: ['copper', 'prothrombin', 'ascites', 'hepatomegaly', 'spiders', 'edema'],
+    sharedNote: 'Note: Hepatitis staging also utilizes Cholesterol, Triglycerides, and Platelets from Laboratory values.',
+  },
 ]
 
 export function ScreenDetailed({ state }: { state: AssessmentState }) {
@@ -36,15 +47,6 @@ export function ScreenDetailed({ state }: { state: AssessmentState }) {
 
   const actionsRef = useRef<HTMLDivElement>(null)
 
-  /*
-    A preset fills all 20 fields at once, so the only thing left to do is the
-    submit — and that sits 539px below the fold on a laptop, further on a
-    phone. Measured on the real screen: the button is at 1395px in a 956px
-    viewport. Leaving the reader at the top of a form that is already complete
-    is the one moment in this flow where the next action is genuinely hidden.
-
-    Honours prefers-reduced-motion: the jump still happens, without the travel.
-  */
   const applyPresetAndReveal = (preset: Preset) => {
     applyPreset(preset)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -56,50 +58,96 @@ export function ScreenDetailed({ state }: { state: AssessmentState }) {
     })
   }
 
-  const gateKeys = new Set<string>(GATE_KEYS)
-  const total = SECTIONS.reduce(
-    (n, sec) => n + fieldsIn(sec.group).filter((f) => !gateKeys.has(f.key)).length,
-    0,
-  )
+  const focusField = (key: string) => {
+    const el = document.getElementById(`f-${key}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+    }
+  }
+
+  const total = ANALYSES.reduce((n, a) => n + a.keys.length, 0)
 
   return (
-    <section className={s.card}>
-      <div className={s.head}>
-        <div className={s.headText}>
-          <h2>Detailed analysis</h2>
-          <p className={s.desc}>Values already entered are carried over.</p>
+    <>
+      <section className={s.card}>
+        <div className={s.head}>
+          <div className={s.headText}>
+            <h2>Detailed analysis</h2>
+            <p className={s.desc}>Values already entered are carried over. Each model requires specific clinical parameters.</p>
+          </div>
+          <span className={s.badge}>{total} fields total</span>
         </div>
-        <span className={s.badge}>{total} fields</span>
-      </div>
 
-      {error && <p role="alert" className={s.error}>{error}</p>}
+        {error && <p role="alert" className={s.error}>{error}</p>}
 
-      <PresetBar onApply={applyPresetAndReveal} />
+        <PresetBar onApply={applyPresetAndReveal} />
+      </section>
 
-      {SECTIONS.map((section, sectionIndex) => {
-        // The gate's values are already in hand -- never ask twice
-        // (WCAG 2.2 §3.3.7 Redundant Entry).
-        const keys = fieldsIn(section.group)
-          .map((f) => f.key)
-          .filter((k) => !gateKeys.has(k))
-        const ready = readinessOf(section.model)
+      {ANALYSES.map((analysis) => {
+        const ready = readinessOf(analysis.id)
+        const missingItems = ready.missing.map((key) => ({
+          key,
+          label: FIELD_BY_KEY[key]?.label ?? key,
+        }))
 
         return (
-          <div key={section.group}>
-            <div className={[s.sectionHead, sectionIndex === 0 ? s.sectionHeadFirst : ''].join(' ')}>
-              <h3>{section.title}</h3>
+          <div key={analysis.id} className={s.analysisCard} id={`analysis-card-${analysis.id}`}>
+            <div className={s.analysisHead}>
+              <div className={s.analysisHeadInfo}>
+                <div className={s.analysisTitleRow}>
+                  <h3 className={s.analysisTitle}>{analysis.title}</h3>
+                  <span className={s.analysisBadge}>{analysis.subtitle}</span>
+                  <span className={s.badge}>{analysis.keys.length} fields</span>
+                </div>
+                <p className={s.analysisDesc}>{analysis.description}</p>
+              </div>
+              <div className={[s.statusPill, ready.ready ? s.statusPillReady : s.statusPillMissing].join(' ')}>
+                <span className={s.statusPillDot} />
+                {ready.ready ? 'Ready' : `${ready.missing.length} values needed`}
+              </div>
             </div>
-            <FieldGrid keys={keys} values={values} onChange={setValue} />
-            <p className={[s.ready, ready.ready ? '' : s.readyNo].join(' ')}>
-              {ready.ready
-                ? `${MODEL_LABEL[section.model]} — ready`
-                : `${MODEL_LABEL[section.model]} — ${ready.missing.length} value${ready.missing.length > 1 ? 's' : ''} still needed`}
-            </p>
+
+            <FieldGrid keys={analysis.keys} values={values} onChange={setValue} />
+
+            {analysis.sharedNote && (
+              <p className={s.sharedNote}>{analysis.sharedNote}</p>
+            )}
+
+            {ready.ready ? (
+              <div className={s.readyBox}>
+                <span className={s.readyDot} />
+                <span>{MODEL_LABEL[analysis.id]} — Ready for analysis (all required values entered)</span>
+              </div>
+            ) : (
+              <div className={s.missingBox}>
+                <div className={s.missingHeader}>
+                  <span className={s.statusPillDot} />
+                  <span className={s.missingTitle}>
+                    {MODEL_LABEL[analysis.id]} — {ready.missing.length} value{ready.missing.length > 1 ? 's' : ''} still needed:
+                  </span>
+                </div>
+                <div className={s.missingChips}>
+                  {missingItems.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className={s.missingChip}
+                      onClick={() => focusField(item.key)}
+                      title={`Click to fill ${item.label}`}
+                    >
+                      <span className={s.missingChipDot} />
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )
       })}
 
-      <div className={s.actions} ref={actionsRef}>
+      <div className={s.actionsCard} ref={actionsRef}>
         <button type="button" className={btn('primary')} onClick={runDetailed} disabled={running}>
           {running ? 'Running…' : 'Run detailed analysis'}
         </button>
@@ -107,6 +155,6 @@ export function ScreenDetailed({ state }: { state: AssessmentState }) {
           Back
         </button>
       </div>
-    </section>
+    </>
   )
 }

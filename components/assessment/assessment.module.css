@@ -114,10 +114,196 @@
 .readyNo { color: var(--ink-muted); }
 .readyNo::before { background: var(--caution); }
 
+/* ── separated analysis cards ── */
+.analysisCard {
+  background: var(--surface-wide);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--glass-lift);
+  padding: 22px;
+  margin-bottom: 18px;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.analysisCard:focus-within {
+  border-color: color-mix(in oklab, var(--brand) 45%, var(--line));
+}
+
+.analysisHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.analysisHeadInfo {
+  flex: 1;
+  min-width: 0;
+}
+.analysisTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.analysisTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  line-height: 22px;
+}
+.analysisBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--surface-sunk);
+  color: var(--ink-muted);
+}
+.analysisDesc {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex: none;
+}
+.statusPillReady {
+  background: color-mix(in oklab, var(--normal) 14%, var(--surface));
+  color: var(--normal);
+  border: 1px solid color-mix(in oklab, var(--normal) 30%, transparent);
+}
+.statusPillMissing {
+  background: color-mix(in oklab, var(--caution) 14%, var(--surface));
+  color: var(--caution);
+  border: 1px solid color-mix(in oklab, var(--caution) 30%, transparent);
+}
+.statusPillDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── missing values indicator & chips ── */
+.missingBox {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: color-mix(in oklab, var(--caution) 7%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--caution) 24%, transparent);
+}
+.missingHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--caution);
+  margin-bottom: 10px;
+}
+.missingTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.missingChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.missingChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid color-mix(in oklab, var(--caution) 35%, transparent);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  user-select: none;
+}
+.missingChip:hover {
+  background: color-mix(in oklab, var(--caution) 15%, var(--surface));
+  border-color: var(--caution);
+  color: var(--caution);
+  transform: translateY(-1px);
+}
+.missingChipDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--caution);
+  flex: none;
+}
+
+.readyBox {
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  background: color-mix(in oklab, var(--normal) 8%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--normal) 25%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--normal);
+}
+.readyDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--normal);
+  flex: none;
+}
+
+.sharedNote {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ink-muted);
+  margin: 14px 0 0;
+  font-style: italic;
+}
+
 /* ── actions. Primary leads, Back trails, identical size. ── */
 .actions {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line);
+}
+.actionsCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 18px 22px;
+  background: var(--surface-wide);
+  border-radius: var(--r-card);
+  box-shadow: var(--glass-lift);
+  margin-bottom: 24px;
 }
 .hint { font-size: 12px; color: var(--ink-muted); }
 
