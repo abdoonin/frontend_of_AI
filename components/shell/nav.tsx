@@ -17,10 +17,13 @@ import {
   ClipboardCheck,
   Calculator,
   MessageCircle,
+  Pill,
+  Receipt,
   ShieldCheck,
   Users,
 } from 'lucide-react'
 import { useAuth, type UserPermissions } from '@/lib/auth-context'
+import { useLanguage } from '@/lib/language-context'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -55,11 +58,8 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/analysis', label: 'New analysis', icon: ClipboardPlus, permission: 'can_run_analysis' },
       { href: '/patients', label: 'Patients', icon: Users, permission: 'can_view_patients' },
-      /*
-        Replaces the Case Management tab. Gated on viewing patients, since
-        every row names one — `can_view_reports` would have been wrong, as this
-        is a clinical worklist rather than analytics.
-      */
+      { href: '/prescriptions', label: 'Prescriptions', icon: Pill, permission: 'can_view_patients' },
+      { href: '/billing', label: 'Billing & Finance', icon: Receipt, permission: 'can_view_patients' },
       { href: '/follow-up', label: 'Follow-up', icon: ClipboardCheck, permission: 'can_view_patients' },
       { href: '/reports', label: 'Reports', icon: ChartColumn, permission: 'can_view_reports' },
       /*
@@ -94,6 +94,7 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
 
 export function Nav() {
   const { hasPermission } = useAuth()
+  const { t } = useLanguage()
   const pathname = usePathname()
 
   return (
@@ -106,18 +107,19 @@ export function Nav() {
         return (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--ink-muted)]">
-              {group.label}
+              {t(group.label)}
             </SidebarGroupLabel>
             <SidebarMenu>
               {items.map((item) => {
                 const Icon = item.icon
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                const label = t(item.label)
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
                       isActive={active}
-                      tooltip={item.label}
+                      tooltip={label}
                       className={
                         // 36px and a 10px gap, matching the specimen's rail --
                         // shadcn ships h-8 with gap-2.
@@ -129,7 +131,7 @@ export function Nav() {
                     >
                       <Link href={item.href}>
                         <Icon />
-                        <span>{item.label}</span>
+                        <span>{label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

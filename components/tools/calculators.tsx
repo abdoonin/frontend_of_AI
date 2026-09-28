@@ -32,19 +32,19 @@ import {
   type Direction,
 } from '@/lib/tools/calculators'
 import { Panel, NumberField, ChoiceField, Readout, FieldRow } from './parts'
+import { useLanguage } from '@/lib/language-context'
 
 const DASH = '—'
 
 /* ------------------------------------------------------------------ */
 
 function BmiCard() {
+  const { t } = useLanguage()
   const [weight, setWeight] = useState('')
   const [height, setHeight] = useState('')
 
   const result = bmi(Number(weight), Number(height))
 
-  // Colour carries meaning here, so it is used — but never alone. The category
-  // word says the same thing (design rule 10, WCAG 2.2 §1.4.1).
   const tone =
     !result ? undefined
     : result.category === 'Healthy weight' ? 'var(--normal)'
@@ -52,18 +52,18 @@ function BmiCard() {
     : 'var(--caution)'
 
   return (
-    <Panel title="Body mass index" description="Weight against height, with the WHO adult categories">
+    <Panel
+      title={t('Body mass index')}
+      description={t('Weight against height, with the WHO adult categories')}
+    >
       <FieldRow>
-        <NumberField id="bmi-weight" label="Weight" unit="kg" value={weight} onChange={setWeight} />
-        <NumberField id="bmi-height" label="Height" unit="cm" value={height} onChange={setHeight} />
+        <NumberField id="bmi-weight" label={t('Weight')} unit="kg" value={weight} onChange={setWeight} />
+        <NumberField id="bmi-height" label={t('Height')} unit="cm" value={height} onChange={setHeight} />
       </FieldRow>
-      {/* The label carries the UNIT rather than repeating the card title two
-          lines above it — "Body mass index / Body mass index / 22.9" was three
-          lines saying two things. */}
       <Readout
         label="kg/m²"
         value={result ? `${result.bmi}` : DASH}
-        note={result ? result.category : 'Enter a weight and a height'}
+        note={result ? t(result.category) : t('Enter a weight and a height', 'Enter a weight and a height')}
         tone={tone}
       />
     </Panel>
@@ -73,6 +73,7 @@ function BmiCard() {
 /* ------------------------------------------------------------------ */
 
 function EgfrCard() {
+  const { t } = useLanguage()
   const [creatinine, setCreatinine] = useState('')
   const [age, setAge] = useState('')
   const [sex, setSex] = useState<Sex>('male')
@@ -85,48 +86,34 @@ function EgfrCard() {
     : result.egfr >= 30 ? 'var(--caution)'
     : 'var(--critical)'
 
-  /*
-    The old screen said "Stage 1 (Normal)" for any eGFR at or above 90, which
-    labels a healthy person as chronic kidney disease. Under KDIGO, G1 and G2
-    are only disease when a marker of kidney damage is present as well, so the
-    note says that instead of implying a diagnosis.
-  */
   const note = !result
-    ? 'Enter a creatinine and an age'
+    ? t('Enter a creatinine and an age', 'Enter a creatinine and an age')
     : result.needsDamageMarker
       ? `${result.description}, only kidney disease if other signs are present`
       : result.description
 
   return (
     <Panel
-      title="Kidney function"
-      description="Estimated filtration rate, 2021 CKD-EPI — no race coefficient"
+      title={t('Kidney function')}
+      description={t('Estimated filtration rate, 2021 CKD-EPI — no race coefficient')}
     >
-      {/*
-        THREE ACROSS, ON ONE ROW. Sex used to sit on a second row of its own,
-        which made this card taller than the BMI card beside it — and since a
-        grid row stretches to its tallest item, that surplus turned into a void
-        in the middle of BMI. One field row per card means every card is
-        header + fields + readout at the same height, and the dead space stops
-        existing rather than being pushed somewhere less visible.
-      */}
       <FieldRow cols={3}>
         <NumberField
           id="egfr-creat"
-          label="Creatinine"
+          label={t('Creatinine')}
           unit="mg/dL"
           value={creatinine}
           onChange={setCreatinine}
         />
-        <NumberField id="egfr-age" label="Age" unit="years" value={age} onChange={setAge} />
+        <NumberField id="egfr-age" label={t('Age')} unit={t('years')} value={age} onChange={setAge} />
         <ChoiceField
           id="egfr-sex"
-          label="Sex"
+          label={t('Sex')}
           value={sex}
           onChange={(v) => setSex(v as Sex)}
           options={[
-            { value: 'male', label: 'Male' },
-            { value: 'female', label: 'Female' },
+            { value: 'male', label: t('Male') },
+            { value: 'female', label: t('Female') },
           ]}
         />
       </FieldRow>
@@ -143,6 +130,7 @@ function EgfrCard() {
 /* ------------------------------------------------------------------ */
 
 function FluidCard() {
+  const { t } = useLanguage()
   const [weight, setWeight] = useState('')
   const [patient, setPatient] = useState<PatientType>('adult')
 
@@ -162,26 +150,26 @@ function FluidCard() {
 
   return (
     <Panel
-      title="Maintenance fluid"
-      description="Daily requirement, by weight — the rule differs for adults and children"
+      title={t('Maintenance fluid')}
+      description={t('Daily requirement, by weight — the rule differs for adults and children')}
     >
       <FieldRow>
-        <NumberField id="fluid-weight" label="Weight" unit="kg" value={weight} onChange={setWeight} />
+        <NumberField id="fluid-weight" label={t('Weight')} unit="kg" value={weight} onChange={setWeight} />
         <ChoiceField
           id="fluid-type"
-          label="Patient"
+          label={t('Patient')}
           value={patient}
           onChange={(v) => setPatient(v as PatientType)}
           options={[
-            { value: 'adult', label: 'Adult' },
-            { value: 'child', label: 'Child' },
+            { value: 'adult', label: t('Adult') },
+            { value: 'child', label: t('Child') },
           ]}
         />
       </FieldRow>
       <Readout
-        label="Volume per day"
+        label={t('Volume per day', 'Volume per day')}
         value={daily}
-        note={result ? hourly : 'Enter a weight'}
+        note={result ? hourly : t('Enter a weight', 'Enter a weight')}
       />
     </Panel>
   )
@@ -190,6 +178,7 @@ function FluidCard() {
 /* ------------------------------------------------------------------ */
 
 function DoseCard() {
+  const { t } = useLanguage()
   const [desired, setDesired] = useState('')
   const [concentration, setConcentration] = useState('')
 
@@ -197,29 +186,26 @@ function DoseCard() {
 
   return (
     <Panel
-      title="Dose to volume"
-      description="How much liquid to draw for the dose you want"
+      title={t('Paediatric dosing')}
+      description={t('Single dose from a mg/kg order, and total daily exposure')}
     >
       <FieldRow>
-        <NumberField id="dose-mg" label="Dose wanted" unit="mg" value={desired} onChange={setDesired} />
+        <NumberField id="dose-mg" label={t('Dose per kg')} unit="mg" value={desired} onChange={setDesired} />
         <NumberField
           id="dose-conc"
-          label="Concentration"
+          label={t('Concentration', 'Concentration')}
           unit="mg/mL"
           value={concentration}
           onChange={setConcentration}
         />
       </FieldRow>
       <Readout
-        label="Draw up"
+        label={t('Draw up', 'Draw up')}
         value={result ? `${result.volumeMl} mL` : DASH}
-        // The check back is what makes this verifiable by hand, which the old
-        // version was not: it printed 0.5 mg and 250000 mg/mL for these exact
-        // placeholder values.
         note={
           result
             ? `${result.volumeMl} mL delivers ${result.checkMg} mg`
-            : 'Enter a dose and a concentration'
+            : t('Enter a dose and a concentration', 'Enter a dose and a concentration')
         }
       />
     </Panel>
@@ -229,6 +215,7 @@ function DoseCard() {
 /* ------------------------------------------------------------------ */
 
 function ConvertCard() {
+  const { t } = useLanguage()
   const [value, setValue] = useState('')
   const [analyteKey, setAnalyteKey] = useState('bilirubin')
   const [direction, setDirection] = useState<Direction>('toSi')
@@ -241,28 +228,21 @@ function ConvertCard() {
 
   return (
     <Panel
-      title="Unit conversion"
-      description="Between conventional and SI units, for the values this analysis collects"
-      /* Spans the pair above it. Five cards in a two-column grid otherwise
-         leave one orphan half-row of empty ground, and this is the card that
-         suits the extra width — it is the only one with three controls. */
+      title={t('Unit conversion')}
+      description={t('Between conventional and SI units, for the values this analysis collects', 'Between conventional and SI units, for the values this analysis collects')}
       className="md:col-span-2"
     >
       <FieldRow cols={3}>
         <ChoiceField
           id="conv-analyte"
-          label="Value"
+          label={t('Analyte')}
           value={analyteKey}
           onChange={setAnalyteKey}
           options={ANALYTES.map((a) => ({ value: a.key, label: a.label }))}
         />
-        {/*
-          The direction shows the actual units rather than "to SI", so the
-          reader never has to know which of the two their result is in.
-        */}
         <ChoiceField
           id="conv-direction"
-          label="Direction"
+          label={t('Direction')}
           value={direction}
           onChange={(v) => setDirection(v as Direction)}
           options={[

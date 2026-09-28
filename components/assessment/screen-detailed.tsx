@@ -1,11 +1,14 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import { ScanLine } from 'lucide-react'
 import type { Preset } from '@/lib/assessment/presets'
 import { FIELD_BY_KEY } from '@/lib/assessment/fields'
 import { MODEL_LABEL, type ModelId } from '@/lib/assessment/models'
 import type { AssessmentState } from '@/lib/assessment/use-assessment'
+import { Button } from '@/components/ui/button'
 import { btn, FieldGrid, PresetBar } from './parts'
+import { OcrScannerDialog } from './ocr-scanner-dialog'
 import s from './assessment.module.css'
 
 interface AnalysisSectionConfig {
@@ -44,6 +47,13 @@ const ANALYSES: AnalysisSectionConfig[] = [
 
 export function ScreenDetailed({ state }: { state: AssessmentState }) {
   const { values, setValue, applyPreset, runDetailed, running, error, readinessOf, goTo } = state
+  const [ocrOpen, setOcrOpen] = useState(false)
+
+  const handleApplyOcr = (extractedValues: Record<string, string>) => {
+    Object.entries(extractedValues).forEach(([k, v]) => {
+      setValue(k, v)
+    })
+  }
 
   const actionsRef = useRef<HTMLDivElement>(null)
 
@@ -81,8 +91,26 @@ export function ScreenDetailed({ state }: { state: AssessmentState }) {
 
         {error && <p role="alert" className={s.error}>{error}</p>}
 
-        <PresetBar onApply={applyPresetAndReveal} />
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+          <PresetBar onApply={applyPresetAndReveal} />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setOcrOpen(true)}
+            className="gap-2 text-xs font-semibold h-9 px-3.5 rounded-lg border-2 border-primary bg-background text-primary hover:bg-primary/10 hover:border-primary shadow-xs transition-all cursor-pointer"
+          >
+            <ScanLine className="h-4 w-4 stroke-[2.25]" />
+            Scan lab report (AI OCR)
+          </Button>
+        </div>
       </section>
+
+      <OcrScannerDialog
+        open={ocrOpen}
+        onClose={() => setOcrOpen(false)}
+        onApplyValues={handleApplyOcr}
+      />
 
       {ANALYSES.map((analysis) => {
         const ready = readinessOf(analysis.id)

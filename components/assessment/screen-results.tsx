@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { MODEL_LABEL, type ModelId } from '@/lib/assessment/models'
 import type { AssessmentState } from '@/lib/assessment/use-assessment'
 import { btn } from './parts'
@@ -180,6 +181,7 @@ export function ScreenResults({ state }: { state: AssessmentState }) {
 
       <div className={s.actions}>
         <button type="button" className={btn('primary')} onClick={reset}>Start over</button>
+        <Link href="/prescriptions" className={btn()}>Write Prescription</Link>
         <button type="button" className={btn()} onClick={() => goTo(3)}>Back</button>
       </div>
     </section>

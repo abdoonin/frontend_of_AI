@@ -13,6 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+import { useLanguage } from "@/lib/language-context"
+
 type ConfirmationType = "delete" | "logout" | "archive" | "custom"
 
 interface ConfirmationDialogProps {
@@ -70,11 +72,12 @@ export function ConfirmationDialog({
   title,
   description,
   confirmText,
-  cancelText = "Cancel",
+  cancelText,
   variant,
   loading = false,
   className,
 }: ConfirmationDialogProps) {
+  const { t, isRtl } = useLanguage()
   const config = confirmationConfig[type]
   const Icon = config.icon
 
@@ -87,13 +90,18 @@ export function ConfirmationDialog({
     onOpenChange(false)
   }
 
+  const resolvedCancelText = cancelText || t("Cancel")
+  const resolvedConfirmText = confirmText || t(config.confirmText)
+  const resolvedTitle = title || t(config.title)
+  const resolvedDescription = description || t(config.description)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("gradient-card border border-border/50 sm:max-w-[425px]", className)}>
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full",
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
               variant === "destructive" || config.variant === "destructive"
                 ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
                 : "bg-primary/10 text-primary"
@@ -101,15 +109,15 @@ export function ConfirmationDialog({
               <Icon className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <DialogTitle className="text-left">
-                {title || config.title}
+              <DialogTitle className={isRtl ? "text-right" : "text-left"}>
+                {resolvedTitle}
               </DialogTitle>
             </div>
           </div>
         </DialogHeader>
 
-        <DialogDescription className="text-left pl-13">
-          {description || config.description}
+        <DialogDescription className={cn(isRtl ? "text-right pr-13" : "text-left pl-13")}>
+          {resolvedDescription}
         </DialogDescription>
 
         <DialogFooter className="flex gap-2 sm:gap-0">
@@ -119,7 +127,7 @@ export function ConfirmationDialog({
             disabled={loading}
             className="hover-lift"
           >
-            {cancelText}
+            {resolvedCancelText}
           </Button>
           <Button
             variant={variant === "destructive" || config.variant === "destructive" ? "destructive" : "default"}
@@ -130,10 +138,10 @@ export function ConfirmationDialog({
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Processing...
+                {t("Processing...")}
               </div>
             ) : (
-              confirmText || config.confirmText
+              resolvedConfirmText
             )}
           </Button>
         </DialogFooter>

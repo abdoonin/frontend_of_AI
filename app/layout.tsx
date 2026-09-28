@@ -27,6 +27,7 @@ export default function RootLayout({
     // server/client mismatch on this element only.
     <html
       lang="en"
+      dir="ltr"
       suppressHydrationWarning
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
@@ -37,6 +38,20 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  localStorage.removeItem('hepatiq.language');
+                  document.cookie = 'hepatiq.language=en; path=/; max-age=0';
+                  document.documentElement.lang = 'en';
+                  document.documentElement.dir = 'ltr';
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="font-sans">
         <ThemeProvider

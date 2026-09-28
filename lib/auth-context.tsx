@@ -16,6 +16,7 @@ export interface UserPermissions {
   can_edit_patients: boolean
   can_delete_patients: boolean
   can_view_records: boolean
+  can_manage_prescriptions?: boolean
   can_manage_users: boolean
   can_view_audit_logs: boolean
   can_access_admin: boolean

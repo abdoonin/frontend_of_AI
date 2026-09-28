@@ -36,8 +36,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import { Check, RotateCcw } from 'lucide-react'
+import { Check, RotateCcw, Calendar } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
+import { fetchClinicalNotes } from '@/lib/api/clinical-notes'
 import {
   Select,
   SelectContent,
@@ -196,7 +197,8 @@ function daysWord(days: number): string {
   return months === 1 ? 'a month ago' : `${months} months ago`
 }
 
-const columns: ColumnDef<WorklistEntry, any>[] = [
+function getColumns(followUpMap: Record<number, string>): ColumnDef<WorklistEntry, any>[] {
+  return [
   {
     id: 'patient',
     header: 'Patient',
@@ -322,6 +324,52 @@ const columns: ColumnDef<WorklistEntry, any>[] = [
     ),
   },
   {
+    id: 'next_visit',
+    header: 'Next visit',
+    accessorFn: (row) => followUpMap[row.patient.id] ?? '',
+    cell: ({ row }) => {
+      const scheduled = followUpMap[row.original.patient.id]
+      if (!scheduled) {
+        return (
+          <span className="text-[12px] text-[var(--ink-muted)]">
+            Not scheduled
+          </span>
+        )
+      }
+      try {
+        const target = new Date(scheduled)
+        const now = new Date()
+        const diffDays = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+        let tone = 'var(--accent)'
+        let bg = 'rgba(16, 185, 129, 0.12)'
+        let label = `In ${diffDays}d (${format(target, 'd MMM')})`
+
+        if (diffDays < 0) {
+          tone = 'var(--critical)'
+          bg = 'rgba(239, 68, 68, 0.12)'
+          label = `Overdue ${Math.abs(diffDays)}d (${format(target, 'd MMM')})`
+        } else if (diffDays <= 3) {
+          tone = 'var(--caution)'
+          bg = 'rgba(245, 158, 11, 0.12)'
+          label = diffDays === 0 ? 'Today' : `Due soon in ${diffDays}d`
+        }
+
+        return (
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium whitespace-nowrap"
+            style={{ color: tone, backgroundColor: bg }}
+          >
+            <Calendar className="size-3" />
+            <span>{label}</span>
+          </span>
+        )
+      } catch {
+        return <span className="text-[12px] text-[var(--ink-muted)]">{scheduled}</span>
+      }
+    },
+  },
+  {
     id: 'last',
     header: 'Last analysis',
     accessorFn: (row) => row.daysSince,
@@ -339,24 +387,39 @@ const columns: ColumnDef<WorklistEntry, any>[] = [
     ),
   },
 ]
+}
 
 export function FollowUpList() {
   const router = useRouter()
   const [entries, setEntries] = useState<WorklistEntry[]>([])
+  const [followUpMap, setFollowUpMap] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState('all')
   const [reviewed, setReviewed] = useState<Set<string>>(new Set())
 
+  const columns = useMemo(() => getColumns(followUpMap), [followUpMap])
+
   useEffect(() => {
     let cancelled = false
-    // Read after mount, never during render: localStorage does not exist on
-    // the server and reading it in the body would mismatch hydration.
     setReviewed(loadReviewed())
-    Promise.all([listPatients('active'), listAllVisits()])
-      .then(([patients, visits]) => {
+    Promise.all([
+      listPatients('active'),
+      listAllVisits(),
+      fetchClinicalNotes().catch(() => []),
+    ])
+      .then(([patients, visits, notes]) => {
         if (cancelled) return
         setEntries(buildWorklist(patients, visits))
+        const map: Record<number, string> = {}
+        for (const note of notes) {
+          if (note.follow_up_date) {
+            if (!map[note.patient_id] || new Date(note.follow_up_date) > new Date(map[note.patient_id])) {
+              map[note.patient_id] = note.follow_up_date
+            }
+          }
+        }
+        setFollowUpMap(map)
       })
       .catch((e) => !cancelled && setError(e?.message ?? 'Could not load the worklist'))
       .finally(() => !cancelled && setLoading(false))

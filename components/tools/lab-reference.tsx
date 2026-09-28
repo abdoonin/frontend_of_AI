@@ -23,6 +23,7 @@
 
 import { labReference, ABBREVIATIONS } from '@/lib/tools/reference'
 import { Panel } from './parts'
+import { useLanguage } from '@/lib/language-context'
 
 /** A term and its value, as one unbreakable unit in the column flow. */
 function Row({
@@ -49,12 +50,13 @@ function Row({
 }
 
 export function LabReference() {
+  const { t } = useLanguage()
   const rows = labReference()
 
   return (
     <Panel
-      title="Reference ranges"
-      description="Every laboratory value this analysis collects, and what counts as normal"
+      title={t('Reference ranges')}
+      description={t('Every laboratory value this analysis collects, and what counts as normal')}
     >
       {/* Three columns on a wide screen, two at tablet, one on a phone. At
           three, each column is ~360px at the 1440 content cap — enough for the
@@ -63,8 +65,8 @@ export function LabReference() {
       <dl className="columns-1 gap-x-8 sm:columns-2 lg:columns-3">
         {rows.map((row) => (
           <Row key={row.key} term={row.label}>
-            <span className="tabular-nums">{row.range}</span>
-            {row.unit && <span className="ml-1.5 text-[12px] text-[var(--ink-muted)]">{row.unit}</span>}
+            <span className="tabular-nums" dir="ltr">{row.range}</span>
+            {row.unit && <span className="ms-1.5 text-[12px] text-[var(--ink-muted)]">{row.unit}</span>}
           </Row>
         ))}
       </dl>
@@ -86,8 +88,12 @@ export function LabReference() {
 }
 
 export function Abbreviations() {
+  const { t } = useLanguage()
   return (
-    <Panel title="Abbreviations" description="The short forms used across this product">
+    <Panel
+      title={t('Medical abbreviations')}
+      description={t('Common hepatology and liver clinical acronyms')}
+    >
       {/* Two columns, not three: these definitions are sentences rather than
           numbers, and at ~360px "Gamma-glutamyl transferase, sensitive to
           alcohol and fatty liver" wraps to three lines. */}

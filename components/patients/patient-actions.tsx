@@ -44,6 +44,7 @@ import { Field, FieldError, FieldGroup } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth-context'
+import { useLanguage } from '@/lib/language-context'
 import { CONTROL_CLASS } from './data-table'
 import {
   archivePatient,
@@ -150,12 +151,14 @@ export function PatientActions({
     }
   }
 
+  const { t } = useLanguage()
+
   const FIELDS: { key: keyof PatientEdit; label: string; type: string }[] = [
-    { key: 'name', label: 'Full name', type: 'text' },
-    { key: 'patientId', label: 'Patient ID', type: 'text' },
-    { key: 'birthDate', label: 'Date of birth', type: 'date' },
-    { key: 'email', label: 'Email', type: 'email' },
-    { key: 'phone', label: 'Phone', type: 'tel' },
+    { key: 'name', label: t('Full name'), type: 'text' },
+    { key: 'patientId', label: t('Patient ID'), type: 'text' },
+    { key: 'birthDate', label: t('Date of birth'), type: 'date' },
+    { key: 'email', label: t('Email'), type: 'email' },
+    { key: 'phone', label: t('Phone'), type: 'tel' },
   ]
 
   return (
@@ -164,14 +167,14 @@ export function PatientActions({
         <Dialog open={editOpen} onOpenChange={(next) => !busy && setEditOpen(next)}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className={CONTROL_CLASS}>
-              Edit
+              {t('Edit')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>Edit patient</DialogTitle>
+              <DialogTitle>{t('Edit patient')}</DialogTitle>
               <DialogDescription>
-                Changing the patient ID changes the address of this page
+                {t('Changing the patient ID changes the address of this page')}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={submitEdit} noValidate>
@@ -193,11 +196,11 @@ export function PatientActions({
               <DialogFooter className="mt-6">
                 <DialogClose asChild>
                   <Button type="button" variant="outline" disabled={busy}>
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                 </DialogClose>
                 <Button type="submit" disabled={busy}>
-                  {busy ? 'Saving…' : 'Save changes'}
+                  {busy ? t('Saving…') : t('Save changes')}
                 </Button>
               </DialogFooter>
             </form>
@@ -206,7 +209,7 @@ export function PatientActions({
       )}
 
       <Button variant="outline" size="sm" className={CONTROL_CLASS} onClick={toggleArchive} disabled={busy}>
-        {archived ? 'Restore' : 'Archive'}
+        {archived ? t('Restore') : t('Archive')}
       </Button>
 
       {/* Only once archived — see the header. Showing it earlier would be a
@@ -215,12 +218,12 @@ export function PatientActions({
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="sm" disabled={busy}>
-              Delete
+              {t('Delete')}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete {patient.name}?</AlertDialogTitle>
+              <AlertDialogTitle>{t('Delete')} {patient.name}?</AlertDialogTitle>
               <AlertDialogDescription>
                 This permanently removes the patient and
                 {visitCount === 1 ? ' their 1 analysis' : ` all ${visitCount} of their analyses`}.
@@ -228,12 +231,12 @@ export function PatientActions({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={remove}
                 className="bg-[var(--critical)] text-white hover:opacity-90"
               >
-                Delete permanently
+                {t('Delete permanently')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

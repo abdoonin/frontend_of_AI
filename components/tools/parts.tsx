@@ -78,7 +78,7 @@ export function NumberField({
     <div>
       <label htmlFor={id} className="mb-1.5 block text-[14px] font-medium leading-[20px] text-[var(--ink)]">
         {label}
-        {unit && <span className="ml-1.5 text-[12px] font-normal text-[var(--ink-muted)]">{unit}</span>}
+        {unit && <span className="ms-1.5 text-[12px] font-normal text-[var(--ink-muted)]">{unit}</span>}
       </label>
       <Input
         id={id}

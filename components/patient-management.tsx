@@ -204,27 +204,27 @@ export function PatientManagement() {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary animate-glow">
                 <Plus className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="gradient-text text-xl">Patient Management</span>
+              <span className="gradient-text text-xl">{t("Patient Management")}</span>
             </CardTitle>
-            <CardDescription className="text-muted-foreground/80">Manage patient records</CardDescription>
+            <CardDescription className="text-muted-foreground/80">{t("Manage patient records")}</CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => { setEditingPatient(null); setFormData({ name: "", patient_id: "", birth_date: "", email: "", phone: "", department: "", doctor_name: "" }) }} className="rounded-xl gradient-primary hover-lift">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Patient
+                {t("Add Patient")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingPatient ? "Edit Patient" : "Add New Patient"}</DialogTitle>
+                <DialogTitle>{editingPatient ? t("Edit Patient") : t("Add New Patient")}</DialogTitle>
                 <DialogDescription>
-                  {editingPatient ? "Update patient information" : "Enter patient details"}
+                  {editingPatient ? t("Update patient information") : t("Enter patient details")}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">{t("Name")}</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -233,16 +233,17 @@ export function PatientManagement() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="patient_id">Patient ID</Label>
+                  <Label htmlFor="patient_id">{t("Patient ID")}</Label>
                   <Input
                     id="patient_id"
                     value={formData.patient_id}
                     onChange={(e) => setFormData({ ...formData, patient_id: e.target.value })}
                     required
+                    dir="ltr"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="birth_date">Birth Date</Label>
+                  <Label htmlFor="birth_date">{t("Birth Date")}</Label>
                   <Input
                     id="birth_date"
                     type="date"
@@ -251,28 +252,30 @@ export function PatientManagement() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("Email")}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleEmailChange(e.target.value)}
                     placeholder="patient@gmail.com"
+                    dir="ltr"
                   />
                   {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t("Phone")}</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     placeholder="2222 333 4543"
+                    dir="ltr"
                   />
                   {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="department">Department</Label>
+                  <Label htmlFor="department">{t("Department")}</Label>
                   <Input
                     id="department"
                     value={formData.department}
@@ -280,7 +283,7 @@ export function PatientManagement() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="doctor_name">Doctor Name</Label>
+                  <Label htmlFor="doctor_name">{t("Doctor Name")}</Label>
                   <Input
                     id="doctor_name"
                     value={formData.doctor_name}
@@ -288,7 +291,7 @@ export function PatientManagement() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Saving...' : (editingPatient ? "Update" : "Add") + " Patient"}
+                  {isLoading ? t('Saving...') : (editingPatient ? t("Update Patient") : t("Add Patient"))}
                 </Button>
               </form>
             </DialogContent>

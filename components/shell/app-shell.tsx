@@ -29,6 +29,7 @@ import {
 import { Nav } from './nav'
 import { UserMenu } from './user-menu'
 import { ThemeToggle } from './theme-toggle'
+import { useLanguage } from '@/lib/language-context'
 
 /**
  * The design system specifies a 272px rail; shadcn's default is 16rem (256px).
@@ -46,9 +47,15 @@ export function AppShell({
   /** e.g. ['Clinical', 'New analysis'] — the last item is the current page. */
   breadcrumb?: string[]
 }) {
+  const { isRtl, t } = useLanguage()
+
   return (
     <SidebarProvider style={{ '--sidebar-width': SIDEBAR_WIDTH } as React.CSSProperties}>
-      <Sidebar collapsible="icon" className="border-r border-[var(--line)]">
+      <Sidebar
+        side={isRtl ? 'right' : 'left'}
+        collapsible="icon"
+        className={isRtl ? 'border-l border-[var(--line)]' : 'border-r border-[var(--line)]'}
+      >
         <SidebarHeader>
           {/*
             A FILLED TILE WITH THE MARK KNOCKED OUT OF IT.
@@ -133,9 +140,9 @@ export function AppShell({
             <nav aria-label="Breadcrumb" className="text-[13px] text-[var(--ink-muted)]">
               {breadcrumb.map((crumb, i) => (
                 <span key={crumb}>
-                  {i > 0 && <span className="px-1.5">/</span>}
+                  {i > 0 && <span className="px-1.5 opacity-60">/</span>}
                   <span className={i === breadcrumb.length - 1 ? 'font-medium text-[var(--ink)]' : ''}>
-                    {crumb}
+                    {t(crumb)}
                   </span>
                 </span>
               ))}

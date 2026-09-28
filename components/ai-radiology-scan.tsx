@@ -13,11 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from 'sonner'
 import { useAnalysis } from "@/lib/analysis-context"
+import { useLanguage } from "@/lib/language-context"
 import { HepatitisInput } from "@/components/hepatitis-input"
 
 
 export function AiRadiologyScan() {
   const { setResult, setInput, setCancerInput, setFattyLiverInput, setHepatitisInput, setAnalysisOrder, result, input, cancerInput, fattyLiverInput, hepatitisInput } = useAnalysis()
+  const { t, isRtl } = useLanguage()
   const [isUploading, setIsUploading] = useState(false)
   const [gateResult, setGateResult] = useState<any>(null)
   const [gateExpanded, setGateExpanded] = useState(true)
@@ -1525,7 +1527,7 @@ export function AiRadiologyScan() {
         <Dialog open={isEditingParameters} onOpenChange={setIsEditingParameters}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Gate Screening Parameters</DialogTitle>
+              <DialogTitle>{t("Edit Gate Screening Parameters")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
               {/* Edit Form */}
@@ -1534,7 +1536,7 @@ export function AiRadiologyScan() {
                 <div className="flex flex-col">
                   <Label className="text-xs font-medium min-h-[2rem] flex items-end">
                     <span className="whitespace-nowrap truncate">{fieldNames['age'] || 'age'}</span>
-                    <span className="text-[10px] text-muted-foreground ml-auto">
+                    <span className="text-[10px] text-muted-foreground ml-auto" dir="ltr">
                       ({fieldMetadata['age'].unit}) - Normal: {fieldMetadata['age'].range}
                     </span>
                   </Label>
@@ -1542,8 +1544,9 @@ export function AiRadiologyScan() {
                     type="number"
                     value={editValues['age'] || ''}
                     onChange={(e) => setEditValues(prev => ({ ...prev, age: e.target.value }))}
-                    placeholder="Enter age"
+                    placeholder={t("Enter age")}
                     className="h-12 w-full text-sm"
+                    dir="ltr"
                   />
                 </div>
                 <div className="flex flex-col">
@@ -1555,11 +1558,11 @@ export function AiRadiologyScan() {
                     onValueChange={(val) => setEditValues(prev => ({ ...prev, gender: val }))}
                   >
                     <SelectTrigger className="h-12 w-full text-sm">
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder={t("Select gender")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Male">{t("Male")}</SelectItem>
+                      <SelectItem value="Female">{t("Female")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1581,9 +1584,9 @@ export function AiRadiologyScan() {
                   return (
                     <div key={key} className="flex flex-col">
                       <Label className="text-xs font-medium min-h-[2rem] flex items-end">
-                        <span className="whitespace-nowrap truncate">{displayName}</span>
+                        <span className="whitespace-nowrap truncate" dir="ltr">{displayName}</span>
                         {metadata && (
-                          <span className="text-[10px] text-muted-foreground ml-auto">
+                          <span className="text-[10px] text-muted-foreground ml-auto" dir="ltr">
                             ({metadata.unit}) - Normal: {metadata.range}
                           </span>
                         )}
@@ -1595,6 +1598,7 @@ export function AiRadiologyScan() {
                         onChange={(e) => setEditValues(prev => ({ ...prev, [key]: e.target.value }))}
                         placeholder={`Enter ${displayName.toLowerCase()}`}
                         className="h-12 w-full text-sm"
+                        dir="ltr"
                       />
                     </div>
                   )
@@ -1603,7 +1607,7 @@ export function AiRadiologyScan() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditingParameters(false)}>
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button
                 onClick={async () => {
@@ -1705,11 +1709,11 @@ export function AiRadiologyScan() {
               >
                 {isUploading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Re-analyzing...
+                    <Loader2 className={`h-4 w-4 animate-spin ${isRtl ? "ml-2" : "mr-2"}`} />
+                    {t("Re-analyzing...")}
                   </>
                 ) : (
-                  "Re-analyze"
+                  t("Re-analyze")
                 )}
               </Button>
             </DialogFooter>

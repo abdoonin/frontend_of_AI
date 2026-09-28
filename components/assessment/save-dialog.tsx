@@ -50,6 +50,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
+import { useLanguage } from '@/lib/language-context'
 import type { GateResult } from '@/lib/api/analyze'
 import { listPatients, type Patient } from '@/lib/api/patients'
 import {
@@ -80,6 +81,7 @@ export function SaveToPatient({
   size?: 'default' | 'sm'
 }) {
   const { hasPermission } = useAuth()
+  const { t, isRtl } = useLanguage()
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<'new' | 'existing'>('new')
   const [patient, setPatient] = useState<PatientDetails>(() => ({
@@ -123,8 +125,6 @@ export function SaveToPatient({
 
   const pickDate = (date: Date | undefined) => {
     setBirthDate(date)
-    // birth_date is stored as a plain string (B-5) and every existing row is
-    // ISO, so new rows match.
     set('birthDate', date ? format(date, 'yyyy-MM-dd') : '')
   }
 
@@ -144,12 +144,12 @@ export function SaveToPatient({
     try {
       if (mode === 'existing') {
         if (!chosen) {
-          setListError('Choose a patient first')
+          setListError(t('Choose a patient first'))
           setSaving(false)
           return
         }
         await saveToExistingPatient(chosen.id, analysis)
-        toast.success('Analysis saved')
+        toast.success(t('Analysis saved'))
       } else {
         const found = validate(patient)
         if (Object.keys(found).length > 0) {
@@ -157,16 +157,14 @@ export function SaveToPatient({
           setSaving(false)
           return
         }
-        // 'regenerate': the identifier was generated, so a clash must mint a
-        // new one rather than file this against whoever already holds it.
         await saveAssessment(patient, analysis, 'regenerate')
-        toast.success('Analysis saved')
+        toast.success(t('Analysis saved'))
       }
       setOpen(false)
       reset()
     } catch (e) {
       if (e instanceof SaveError && e.field) setErrors({ [e.field]: e.message })
-      else toast.error(e instanceof SaveError ? e.message : 'Could not save the analysis')
+      else toast.error(e instanceof SaveError ? e.message : t('Could not save the analysis'))
     } finally {
       setSaving(false)
     }
@@ -175,29 +173,28 @@ export function SaveToPatient({
   return (
     <Dialog open={open} onOpenChange={(next) => !saving && setOpen(next)}>
       <DialogTrigger asChild>
-        <Button size={size === 'sm' ? 'sm' : 'default'}>Save to patient</Button>
+        <Button size={size === 'sm' ? 'sm' : 'default'}>{t('Save to patient')}</Button>
       </DialogTrigger>
 
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Save to patient</DialogTitle>
+          <DialogTitle>{t('Save to patient')}</DialogTitle>
           <DialogDescription>
-            File this analysis against a new record, or add it as a visit for someone already
-            seen
+            {t('File this analysis against a new record, or add it as a visit for someone already seen')}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as 'new' | 'existing')}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="new">New patient</TabsTrigger>
-            <TabsTrigger value="existing">Existing patient</TabsTrigger>
+            <TabsTrigger value="new">{t('New patient')}</TabsTrigger>
+            <TabsTrigger value="existing">{t('Existing patient')}</TabsTrigger>
           </TabsList>
 
           <form onSubmit={submit} noValidate>
             <TabsContent value="new" className="mt-4">
               <FieldGroup>
                 <Field data-invalid={Boolean(errors.name)}>
-                  <Label htmlFor="save-name">Full name</Label>
+                  <Label htmlFor="save-name">{t('Full name')}</Label>
                   <Input
                     id="save-name"
                     name="name"
@@ -208,15 +205,8 @@ export function SaveToPatient({
                   <FieldError>{errors.name}</FieldError>
                 </Field>
 
-                {/*
-                  Read-only, deliberately. The clinic issues the number and the
-                  clinician confirms it. Regenerate covers the one case that
-                  matters -- a clash, or a printed label already carrying a
-                  different code -- without reopening the field to a typo that
-                  would file this analysis against someone else.
-                */}
                 <Field data-invalid={Boolean(errors.patientId)}>
-                  <Label htmlFor="save-patientId">Patient ID</Label>
+                  <Label htmlFor="save-patientId">{t('Patient ID')}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       id="save-patientId"
@@ -224,27 +214,27 @@ export function SaveToPatient({
                       value={patient.patientId}
                       readOnly
                       aria-describedby="save-patientId-hint"
-                      className="tabular-nums"
+                      className="tabular-nums font-mono"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      aria-label="Generate a different patient ID"
-                      title="Generate a different patient ID"
+                      aria-label={t('Generate a different patient ID')}
+                      title={t('Generate a different patient ID')}
                       onClick={() => set('patientId', generatePatientId())}
                     >
                       <RefreshCw />
                     </Button>
                   </div>
                   <p id="save-patientId-hint" className="text-muted-foreground text-sm">
-                    Generated automatically
+                    {t('Generated automatically')}
                   </p>
                   <FieldError>{errors.patientId}</FieldError>
                 </Field>
 
                 <Field data-invalid={Boolean(errors.birthDate)}>
-                  <Label htmlFor="save-birthDate">Date of birth</Label>
+                  <Label htmlFor="save-birthDate">{t('Date of birth')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -253,12 +243,13 @@ export function SaveToPatient({
                         variant="outline"
                         aria-invalid={Boolean(errors.birthDate)}
                         className={cn(
-                          'justify-start text-left font-normal',
+                          'justify-start font-normal',
+                          isRtl ? 'text-right' : 'text-left',
                           !birthDate && 'text-muted-foreground',
                         )}
                       >
-                        <CalendarIcon />
-                        {birthDate ? format(birthDate, 'PPP') : <span>Pick a date</span>}
+                        <CalendarIcon className={isRtl ? 'ml-2' : 'mr-2'} />
+                        {birthDate ? format(birthDate, 'PPP') : <span>{t('Pick a date')}</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -279,7 +270,7 @@ export function SaveToPatient({
                 </Field>
 
                 <Field data-invalid={Boolean(errors.email)}>
-                  <Label htmlFor="save-email">Email</Label>
+                  <Label htmlFor="save-email">{t('Email')}</Label>
                   <Input
                     id="save-email"
                     name="email"
@@ -287,18 +278,20 @@ export function SaveToPatient({
                     value={patient.email}
                     onChange={(e) => set('email', e.target.value)}
                     aria-invalid={Boolean(errors.email)}
+                    dir="ltr"
                   />
                   <FieldError>{errors.email}</FieldError>
                 </Field>
 
                 <Field>
-                  <Label htmlFor="save-phone">Phone</Label>
+                  <Label htmlFor="save-phone">{t('Phone')}</Label>
                   <Input
                     id="save-phone"
                     name="phone"
                     type="tel"
                     value={patient.phone}
                     onChange={(e) => set('phone', e.target.value)}
+                    dir="ltr"
                   />
                 </Field>
               </FieldGroup>
@@ -307,18 +300,21 @@ export function SaveToPatient({
             <TabsContent value="existing" className="mt-4">
               <FieldGroup>
                 <Field>
-                  <Label htmlFor="save-search">Find the patient</Label>
+                  <Label htmlFor="save-search">{t('Find the patient')}</Label>
                   <div className="relative">
                     <Search
                       aria-hidden="true"
-                      className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                      className={cn(
+                        'text-muted-foreground pointer-events-none absolute top-1/2 size-4 -translate-y-1/2',
+                        isRtl ? 'right-3' : 'left-3'
+                      )}
                     />
                     <Input
                       id="save-search"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Name or patient ID"
-                      className="pl-9"
+                      placeholder={t('Name or patient ID')}
+                      className={isRtl ? 'pr-9 pl-3 text-right' : 'pl-9 text-left'}
                     />
                   </div>
                 </Field>
@@ -326,7 +322,7 @@ export function SaveToPatient({
                 <div className="flex flex-col overflow-hidden rounded-[var(--r-md)] bg-[var(--surface)]">
                   {matches.length === 0 ? (
                     <p className="text-muted-foreground p-4 text-center text-sm">
-                      {listError ?? (existing.length === 0 ? 'Loading' : 'No patient matches that')}
+                      {listError ?? (existing.length === 0 ? t('Loading') : t('No patient matches that'))}
                     </p>
                   ) : (
                     matches.map((p) => {
@@ -341,7 +337,8 @@ export function SaveToPatient({
                           }}
                           aria-pressed={active}
                           className={cn(
-                            'flex flex-col items-start gap-0.5 border-b border-[var(--line)] px-4 py-3 text-left last:border-0',
+                            'flex flex-col items-start gap-0.5 border-b border-[var(--line)] px-4 py-3 last:border-0',
+                            isRtl ? 'text-right' : 'text-left',
                             'transition-colors hover:bg-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
                             active && 'bg-[var(--accent)]',
                           )}
@@ -349,7 +346,7 @@ export function SaveToPatient({
                           <span className="text-[14px] font-medium text-[var(--ink)]">
                             {p.name}
                           </span>
-                          <span className="text-[12px] tabular-nums text-[var(--ink-muted)]">
+                          <span className="text-[12px] tabular-nums font-mono text-[var(--ink-muted)]">
                             #{p.patientId}
                           </span>
                         </button>
@@ -360,7 +357,7 @@ export function SaveToPatient({
 
                 {chosen && (
                   <p className="text-muted-foreground text-sm">
-                    Saves as a new visit for {chosen.name}
+                    {t('Saves as a new visit for')} {chosen.name}
                   </p>
                 )}
               </FieldGroup>
@@ -369,11 +366,11 @@ export function SaveToPatient({
             <DialogFooter className="mt-6">
               <DialogClose asChild>
                 <Button type="button" variant="outline" disabled={saving}>
-                  Cancel
+                  {t('Cancel')}
                 </Button>
               </DialogClose>
               <Button type="submit" disabled={saving || (mode === 'existing' && !chosen)}>
-                {saving ? 'Saving…' : 'Save analysis'}
+                {saving ? t('Saving…') : t('Save analysis')}
               </Button>
             </DialogFooter>
           </form>

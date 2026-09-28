@@ -11,11 +11,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAnalysis } from "@/lib/analysis-context"
+import { useLanguage } from "@/lib/language-context"
 import { useState, useEffect, useRef } from "react"
 import { toast } from 'sonner'
 
 export function AiAnalysisResult() {
   const { result, input, analysisOrder, reset, resetAll } = useAnalysis()
+  const { t, isRtl } = useLanguage()
   const [isPatientFormOpen, setIsPatientFormOpen] = useState(false)
   const [filterOptions, setFilterOptions] = useState({
     showHepatitis: true,
@@ -636,10 +638,10 @@ export function AiAnalysisResult() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Link Analysis to Patient
+                  {t("Link Analysis to Patient")}
                 </DialogTitle>
                 <DialogDescription>
-                  Associate this AI analysis with a patient record and save to database
+                  {t("Associate this AI analysis with a patient record and save to database")}
                 </DialogDescription>
               </DialogHeader>
 
@@ -647,19 +649,19 @@ export function AiAnalysisResult() {
                 <div className="space-y-4 py-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="patient-name">Patient Name *</Label>
+                      <Label htmlFor="patient-name">{t("Full name")} *</Label>
                       <Input
                         id="patient-name"
                         value={patientInfo.name}
                         onChange={(e) => setPatientInfo({ ...patientInfo, name: e.target.value })}
-                        placeholder="Enter patient full name"
+                        placeholder={t("Enter patient full name")}
                         required
                         autoComplete="off"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="patient-id">Patient ID *</Label>
+                      <Label htmlFor="patient-id">{t("Patient ID")} *</Label>
                       <Input
                         id="patient-id"
                         value={patientInfo.patientId}
@@ -667,11 +669,12 @@ export function AiAnalysisResult() {
                         placeholder="P-2024-XXX"
                         required
                         autoComplete="off"
+                        dir="ltr"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="birth-date">Birth Date</Label>
+                      <Label htmlFor="birth-date">{t("Birth Date")}</Label>
                       <Input
                         id="birth-date"
                         type="date"
@@ -681,7 +684,7 @@ export function AiAnalysisResult() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t("Email")}</Label>
                       <Input
                         id="email"
                         type="email"
@@ -689,12 +692,13 @@ export function AiAnalysisResult() {
                         onChange={(e) => handleEmailChange(e.target.value)}
                         placeholder="patient@gmail.com"
                         autoComplete="off"
+                        dir="ltr"
                       />
                       {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">{t("Phone Number")}</Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -702,6 +706,7 @@ export function AiAnalysisResult() {
                         onChange={(e) => handlePhoneChange(e.target.value)}
                         placeholder="2222 333 4543"
                         autoComplete="off"
+                        dir="ltr"
                       />
                       {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
                     </div>
@@ -709,7 +714,7 @@ export function AiAnalysisResult() {
 
 
                     <div className="space-y-2">
-                      <Label htmlFor="analysis-date">Analysis Date</Label>
+                      <Label htmlFor="analysis-date">{t("Analysis Date")}</Label>
                       <Input
                         id="analysis-date"
                         type="date"
@@ -719,7 +724,7 @@ export function AiAnalysisResult() {
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="profile-picture">Profile Picture</Label>
+                      <Label htmlFor="profile-picture">{t("Profile Picture")}</Label>
                       <div className="flex items-center gap-4">
                         <Input
                           id="profile-picture"
@@ -748,7 +753,7 @@ export function AiAnalysisResult() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="analysis-time">Analysis Time</Label>
+                      <Label htmlFor="analysis-time">{t("Analysis Time")}</Label>
                       <Input
                         id="analysis-time"
                         type="time"
@@ -770,7 +775,7 @@ export function AiAnalysisResult() {
                   onClick={() => setIsPatientFormOpen(false)}
                   disabled={isSaving}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </Button>
                 <Button
                   onClick={handleSavePatientReport}
@@ -780,12 +785,12 @@ export function AiAnalysisResult() {
                   {isSaving ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
+                      {t("Saving...")}
                     </>
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Save Patient Report
+                      {t("Save Patient Report")}
                     </>
                   )}
                 </Button>

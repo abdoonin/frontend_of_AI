@@ -20,14 +20,20 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useLanguage } from '@/lib/language-context'
 import { getPatient, listVisits, type Patient, type Visit } from '@/lib/api/patients'
 import { STAGE_LABEL } from '@/lib/clinical/stages'
 import { CONTROL_CLASS } from './data-table'
 import { PatientActions } from './patient-actions'
 import { VisitHistory } from './visit-history'
+import { PrescriptionsList } from '@/components/prescriptions/prescriptions-list'
+import { ChronicConditionsCard } from './chronic-conditions-card'
+import { ClinicalNotesList } from '@/components/clinical-notes/clinical-notes-list'
+import { UltrasoundList } from '@/components/ultrasound/ultrasound-list'
+import { PatientBillingCard } from '@/components/billing/patient-billing-card'
 /* The assessment's own charts and the card surface they were designed in.
    Importing the module rather than restating its rules is what keeps a chart
    on this page identical to the same chart on the result screen. */
@@ -387,10 +393,13 @@ export function PatientProfile({
             ? { text: `Cancer risk ${latest.cancerRiskPct}%`, tone: 'var(--caution)' }
             : { text: 'Assessed', tone: 'var(--ink-muted)' }
 
+  const { isRtl, t } = useLanguage()
+  const BackIcon = isRtl ? ArrowRight : ArrowLeft
+
   const identity = [
-    sex,
-    age ? `${age} years` : null,
-    patient.phone,
+    sex ? (isRtl ? (sex === 'female' ? 'أنثى' : 'ذكر') : sex) : null,
+    age ? `${age} ${t('years')}` : null,
+    patient.phone ? <span dir="ltr" key="phone">{patient.phone}</span> : null,
     patient.email,
   ].filter(Boolean)
 
@@ -399,8 +408,8 @@ export function PatientProfile({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="outline" size="sm" className={CONTROL_CLASS} asChild>
           <Link href={back.href}>
-            <ArrowLeft />
-            {back.label}
+            <BackIcon />
+            {t(back.label)}
           </Link>
         </Button>
         <PatientActions patient={patient} visitCount={visits.length} onChanged={setPatient} />
@@ -424,9 +433,9 @@ export function PatientProfile({
                 {patient.status === 'archived' && <Badge variant="outline">Archived</Badge>}
               </div>
               <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[14px] text-[var(--ink-muted)]">
-                <span className="tabular-nums">#{patient.patientId}</span>
-                {identity.map((item) => (
-                  <span key={item} className="flex items-center gap-x-2.5">
+                <span className="tabular-nums" dir="ltr">#{patient.patientId}</span>
+                {identity.map((item, idx) => (
+                  <span key={idx} className="flex items-center gap-x-2.5">
                     {/* A drawn rule, not a middot. Ali has asked twice for
                         those to go; the assessment screens already separate
                         facts this way (.patientRule). */}
@@ -440,9 +449,9 @@ export function PatientProfile({
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-[12px] text-[var(--ink-muted)]">Patient since</p>
-            <p className="text-[14px] tabular-nums text-[var(--ink)]">
+          <div className="text-end">
+            <p className="text-[12px] text-[var(--ink-muted)]">{t('Patient since')}</p>
+            <p className="text-[14px] tabular-nums text-[var(--ink)]" dir="ltr">
               {patient.createdAt ? format(new Date(patient.createdAt), 'd MMM yyyy') : '—'}
             </p>
           </div>
@@ -454,19 +463,19 @@ export function PatientProfile({
               over 24% reads as raised; the reverse reads as sunken. */}
           <div className="grid gap-4 px-[22px] pb-[22px] sm:grid-cols-3">
           <Stat
-            label="Liver scarring stage"
+            label={t('Liver scarring stage')}
             value={stageCard.value}
             note={stageCard.note}
             tone={stageCard.tone}
           />
           <Stat
-            label="Change since last visit"
+            label={t('Change since last visit')}
             value={change.value}
             note={change.note}
             tone={change.tone}
           />
           <Stat
-            label="Last analysis"
+            label={t('Last analysis')}
             value={
               latest?.createdAt
                 ? daysAgo(latest.createdAt).replace(/^./, (c) => c.toUpperCase())
@@ -481,27 +490,44 @@ export function PatientProfile({
         </div>
       </section>
 
+      {/* Chronic Conditions & Comorbidities */}
+      <ChronicConditionsCard
+        patientId={patient.id}
+        initialConditions={patient.chronicConditions}
+      />
 
-      {/*
-        THE RESULT CHARTS, ON THE PATIENT RATHER THAN THE RUN.
+      {/* Clinical Documentation (SOAP Notes) */}
+      <ClinicalNotesList
+        patientId={patient.id}
+        patientName={patient.name}
+        patientCode={patient.patientId}
+        latestVisit={latest}
+      />
 
-        These are the same three components the assessment's own result screen
-        renders — imported, not reimplemented, so there is one version of each
-        to keep right. Until now they were drawn once, on the screen that
-        produced them, and were unreachable the moment you navigated away; the
-        record survived in the database and its picture did not.
+      {/* Ultrasound & Imaging Documentation (Phase 5) */}
+      <UltrasoundList
+        patientId={patient.id}
+        patientName={patient.name}
+        patientCode={patient.patientId}
+      />
 
-        WHICH VISIT. The most recent one that stored enough to draw, named in
-        the heading so it can never be mistaken for a summary of the patient's
-        whole history. Each card is independently conditional because coverage
-        is uneven: measured across the live database, roughly a third of
-        records carry inputs, gate and staging, a third carry inputs alone, and
-        the oldest carry model output with no inputs at all. A visit shows what
-        it has and says nothing about what it does not.
-      */}
       {/* The table comes first: it is the record, and the charts describe one
           row of it. Ali's order, 2026-08-12. */}
       <VisitHistory visits={visits} />
+
+      {/* E-Prescriptions for this patient */}
+      <div className="pt-2">
+        <PrescriptionsList patientId={patient.id} patientName={patient.name} />
+      </div>
+
+      {/* Consultation Billing & Patient Invoices (Phase 6) */}
+      <div className="pt-2">
+        <PatientBillingCard
+          patientId={patient.id}
+          patientHospitalId={patient.patientId}
+          patientName={patient.name}
+        />
+      </div>
 
       {chartVisit && (
         /*

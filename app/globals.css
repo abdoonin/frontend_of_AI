@@ -668,3 +668,38 @@ body:is(.dark *)::before {
     animation: none;
   }
 }
+
+/* ─────────────────────────────────────────────────────────
+   Print Styles for E-Prescriptions & Reports
+   ───────────────────────────────────────────────────────── */
+@media print {
+  .no-print,
+  aside,
+  nav,
+  button:not(.allow-print) {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #printable-rx {
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8mm !important;
+    margin: 0 auto !important;
+  }
+
+  @page {
+    margin: 8mm;
+  }
+}
+

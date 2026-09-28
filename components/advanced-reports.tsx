@@ -41,6 +41,7 @@ import { toast } from 'sonner'
 import { usePatients } from "@/lib/analysis-context"
 import { useAuth } from "@/lib/auth-context"
 import { hasModelResults, parseDetailedResults } from '@/lib/reports/detailed-results'
+import { useLanguage } from "@/lib/language-context"
 
 interface AdvancedReportsProps {
   className?: string
@@ -66,6 +67,9 @@ interface PatientAnalysis {
 }
 
 export function AdvancedReports({ className }: AdvancedReportsProps) {
+  const { language, isRtl, t } = useLanguage()
+  const isAr = language === 'ar'
+
   // Get the current logged in user
   const { user, isLoading } = useAuth()
 
@@ -3136,42 +3140,45 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="h-5 w-5" />
-              Edit Patient Information
+              {isAr ? "تعديل بيانات المريض" : "Edit Patient Information"}
             </DialogTitle>
             <DialogDescription>
-              Update patient information
+              {isAr ? "تحديث معلومات وبيانات المريض" : "Update patient information"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             {/* Patient Information Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground border-b pb-2">Patient Information</h3>
+              <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                {isAr ? "معلومات المريض" : "Patient Information"}
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-patient-name">Patient Name *</Label>
+                  <Label htmlFor="edit-patient-name">{isAr ? "اسم المريض *" : "Patient Name *"}</Label>
                   <Input
                     id="edit-patient-name"
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    placeholder="Enter patient full name"
+                    placeholder={isAr ? "أدخل اسم المريض بالكامل" : "Enter patient full name"}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-patient-id">Patient ID *</Label>
+                  <Label htmlFor="edit-patient-id">{isAr ? "رقم المريض *" : "Patient ID *"}</Label>
                   <Input
                     id="edit-patient-id"
                     value={editForm.patientId}
                     onChange={(e) => setEditForm({ ...editForm, patientId: e.target.value })}
                     placeholder="P-2024-XXX"
                     required
+                    dir="ltr"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-birth-date">Birth Date</Label>
+                  <Label htmlFor="edit-birth-date">{isAr ? "تاريخ الميلاد" : "Birth Date"}</Label>
                   <Input
                     id="edit-birth-date"
                     type="date"
@@ -3183,30 +3190,32 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-email">Email</Label>
+                  <Label htmlFor="edit-email">{isAr ? "البريد الإلكتروني" : "Email"}</Label>
                   <Input
                     id="edit-email"
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     placeholder="patient@example.com"
+                    dir="ltr"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-phone">Phone Number</Label>
+                  <Label htmlFor="edit-phone">{isAr ? "رقم الهاتف" : "Phone Number"}</Label>
                   <Input
                     id="edit-phone"
                     type="tel"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                     placeholder="+1 (555) 123-4567"
+                    dir="ltr"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-profile-picture">Profile Picture</Label>
+                <Label htmlFor="edit-profile-picture">{isAr ? "الصورة الشخصية" : "Profile Picture"}</Label>
                 <div className="flex items-center gap-4">
                   <Input
                     id="edit-profile-picture"
@@ -3244,13 +3253,13 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
             >
-              Cancel
+              {isAr ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleUpdateAnalysis}
               className="gradient-primary"
             >
-              Update Patient Info
+              {isAr ? "تحديث بيانات المريض" : "Update Patient Info"}
             </Button>
           </div>
         </DialogContent>
@@ -3262,10 +3271,12 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-emerald-600" />
-              Medical Laboratory Report
+              {isAr ? "تقرير المختبر الطبي" : "Medical Laboratory Report"}
             </DialogTitle>
             <DialogDescription>
-              AI-Assisted Diagnostic Analysis for {selectedAnalysisForReport?.patient_name}
+              {isAr 
+                ? `التحليل التشخيصي المدعوم بالذكاء الاصطناعي لـ ${selectedAnalysisForReport?.patient_name}`
+                : `AI-Assisted Diagnostic Analysis for ${selectedAnalysisForReport?.patient_name}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -3275,18 +3286,26 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
               {/* â”€â”€ Report Header â”€â”€ */}
               <div className="flex items-center justify-between border-b-2 border-emerald-500 pb-3">
                 <div>
-                  <h2 className="text-lg font-bold text-emerald-700">Medical Laboratory Report</h2>
-                  <p className="text-xs text-muted-foreground">AI-Assisted Diagnostic Analysis</p>
+                  <h2 className="text-lg font-bold text-emerald-700">
+                    {isAr ? "تقرير المختبر الطبي" : "Medical Laboratory Report"}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    {isAr ? "التحليل التشخيصي المدعوم بالذكاء الاصطناعي" : "AI-Assisted Diagnostic Analysis"}
+                  </p>
                 </div>
                 <div className="text-right text-xs text-muted-foreground space-y-0.5">
-                  <p className="font-semibold text-foreground">Report #{selectedAnalysisForReport.id}</p>
+                  <p className="font-semibold text-foreground">
+                    {isAr ? `تقرير رقم #${selectedAnalysisForReport.id}` : `Report #${selectedAnalysisForReport.id}`}
+                  </p>
                   <p>{format(new Date(selectedAnalysisForReport.created_at), 'PPP')}</p>
                 </div>
               </div>
 
               {/* â”€â”€ Patient Information â”€â”€ */}
               <div>
-                <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-3">Patient Information</h3>
+                <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-3">
+                  {isAr ? "معلومات المريض" : "Patient Information"}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                   <div className="flex items-center gap-3 md:col-span-2 mb-2">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm overflow-hidden flex-shrink-0">
@@ -3302,40 +3321,46 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                     </div>
                   </div>
                   {selectedAnalysisForReport.birth_date && (
-                    <div className="text-sm"><span className="text-muted-foreground">Date of Birth:</span> <span className="font-medium">{format(new Date(selectedAnalysisForReport.birth_date), 'PP')}</span></div>
+                    <div className="text-sm"><span className="text-muted-foreground">{isAr ? "تاريخ الميلاد:" : "Date of Birth:"}</span> <span className="font-medium">{format(new Date(selectedAnalysisForReport.birth_date), 'PP')}</span></div>
                   )}
                   {selectedAnalysisForReport.birth_date && (
-                    <div className="text-sm"><span className="text-muted-foreground">Age:</span> <span className="font-medium">{Math.floor((Date.now() - new Date(selectedAnalysisForReport.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years</span></div>
+                    <div className="text-sm"><span className="text-muted-foreground">{isAr ? "العمر:" : "Age:"}</span> <span className="font-medium">{Math.floor((Date.now() - new Date(selectedAnalysisForReport.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} {isAr ? "سنة" : "years"}</span></div>
                   )}
                   {selectedAnalysisForReport.email && (
-                    <div className="text-sm"><span className="text-muted-foreground">Email:</span> <span className="font-medium">{selectedAnalysisForReport.email}</span></div>
+                    <div className="text-sm"><span className="text-muted-foreground">{isAr ? "البريد الإلكتروني:" : "Email:"}</span> <span className="font-medium" dir="ltr">{selectedAnalysisForReport.email}</span></div>
                   )}
                   {selectedAnalysisForReport.phone && (
-                    <div className="text-sm"><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{selectedAnalysisForReport.phone}</span></div>
+                    <div className="text-sm"><span className="text-muted-foreground">{isAr ? "رقم الهاتف:" : "Phone:"}</span> <span className="font-medium" dir="ltr">{selectedAnalysisForReport.phone}</span></div>
                   )}
                   {selectedAnalysisForReport.doctor_name && (
-                    <div className="text-sm"><span className="text-muted-foreground">Doctor:</span> <span className="font-medium">{selectedAnalysisForReport.doctor_name}</span></div>
+                    <div className="text-sm"><span className="text-muted-foreground">{isAr ? "الطبيب:" : "Doctor:"}</span> <span className="font-medium">{selectedAnalysisForReport.doctor_name}</span></div>
                   )}
                   {selectedAnalysisForReport.department && (
-                    <div className="text-sm"><span className="text-muted-foreground">Department:</span> <span className="font-medium">{selectedAnalysisForReport.department}</span></div>
+                    <div className="text-sm"><span className="text-muted-foreground">{isAr ? "القسم:" : "Department:"}</span> <span className="font-medium">{selectedAnalysisForReport.department}</span></div>
                   )}
                 </div>
               </div>
 
               {/* â”€â”€ AI Diagnosis â”€â”€ */}
               <div>
-                <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-3">AI Diagnosis</h3>
+                <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-3">
+                  {isAr ? "تشخيص الذكاء الاصطناعي" : "AI Diagnosis"}
+                </h3>
                 <div className="rounded-lg border border-yellow-200 bg-yellow-50/50 p-0 overflow-hidden">
                   <div className="bg-yellow-100/50 border-b border-yellow-100 p-3">
-                    <h3 className="font-bold text-yellow-900 text-sm uppercase">General Test Result</h3>
+                    <h3 className="font-bold text-yellow-900 text-sm uppercase">
+                      {isAr ? "نتيجة الفحص العام" : "General Test Result"}
+                    </h3>
                   </div>
                   <div className="p-4 space-y-4">
                     {/* Diagnosis */}
                     <div>
-                      <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">Diagnosis</p>
+                      <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">
+                        {isAr ? "التشخيص" : "Diagnosis"}
+                      </p>
                       <p className="text-lg font-bold text-yellow-900">
                         {selectedAnalysisForReport.diagnosis && selectedAnalysisForReport.diagnosis.includes('Complex Liver Disease')
-                          ? 'Potential Liver Disease Detected'
+                          ? (isAr ? 'احتمال وجود أمراض كبدية' : 'Potential Liver Disease Detected')
                           : selectedAnalysisForReport.diagnosis}
                       </p>
                     </div>
@@ -3343,8 +3368,10 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                     {/* Confidence */}
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">Confidence</p>
-                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs font-bold">
+                        <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                          {isAr ? "مستوى الثقة" : "Confidence"}
+                        </p>
+                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs font-bold" dir="ltr">
                           {selectedAnalysisForReport.confidence}%
                         </Badge>
                       </div>
@@ -3359,7 +3386,9 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                     {/* Clinical Advice */}
                     {selectedAnalysisForReport.advice && (
                       <div>
-                        <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">Clinical Advice</p>
+                        <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">
+                          {isAr ? "النصيحة السريرية" : "Clinical Advice"}
+                        </p>
                         <p className="text-sm text-gray-800 leading-relaxed">{selectedAnalysisForReport.advice}</p>
                       </div>
                     )}
@@ -3375,40 +3404,48 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 if (!hasDetails) return null
                 return (
                   <div>
-                    <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-3">Detailed Analysis Results</h3>
+                    <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-3">
+                      {isAr ? "نتائج التحليل التفصيلي" : "Detailed Analysis Results"}
+                    </h3>
                     <div className="space-y-3">
                       {dr.cancer && (
                         <div className="p-4 rounded-lg border border-red-200 bg-red-50/50">
-                          <h4 className="font-semibold text-red-900 text-sm mb-2">Cancer Risk Assessment</h4>
+                          <h4 className="font-semibold text-red-900 text-sm mb-2">
+                            {isAr ? "تقييم مخاطر السرطان" : "Cancer Risk Assessment"}
+                          </h4>
                           <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div><span className="text-muted-foreground">Risk Level:</span> <span className="font-medium">{dr.cancer.risk_level || 'N/A'}</span></div>
-                            <div><span className="text-muted-foreground">Risk:</span> <span className="font-medium">{dr.cancer.risk_percentage?.toFixed(1) || 'N/A'}%</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "مستوى الخطر:" : "Risk Level:"}</span> <span className="font-medium">{dr.cancer.risk_level || 'N/A'}</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "نسبة الخطر:" : "Risk:"}</span> <span className="font-medium" dir="ltr">{dr.cancer.risk_percentage?.toFixed(1) || 'N/A'}%</span></div>
                           </div>
                           {dr.cancer.advice && <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-red-200">{dr.cancer.advice}</p>}
                         </div>
                       )}
                       {dr.hepatitis && (
                         <div className="p-4 rounded-lg border border-blue-200 bg-blue-50/50">
-                          <h4 className="font-semibold text-blue-900 text-sm mb-2">Hepatitis Analysis</h4>
+                          <h4 className="font-semibold text-blue-900 text-sm mb-2">
+                            {isAr ? "تحليل التهاب الكبد" : "Hepatitis Analysis"}
+                          </h4>
                           <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div><span className="text-muted-foreground">Stage:</span> <span className="font-medium">{dr.hepatitis.stage || 'N/A'}</span></div>
-                            <div><span className="text-muted-foreground">Risk Level:</span> <span className="font-medium">{dr.hepatitis.risk_level || 'N/A'}</span></div>
-                            <div><span className="text-muted-foreground">Mortality Risk:</span> <span className="font-medium">{dr.hepatitis.mortality_risk?.toFixed(1) || 'N/A'}%</span></div>
-                            <div><span className="text-muted-foreground">Complications:</span> <span className="font-medium">{dr.hepatitis.complications_risk?.toFixed(1) || 'N/A'}%</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "المرحلة:" : "Stage:"}</span> <span className="font-medium">{dr.hepatitis.stage || 'N/A'}</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "مستوى الخطر:" : "Risk Level:"}</span> <span className="font-medium">{dr.hepatitis.risk_level || 'N/A'}</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "خطر الوفاة:" : "Mortality Risk:"}</span> <span className="font-medium" dir="ltr">{dr.hepatitis.mortality_risk?.toFixed(1) || 'N/A'}%</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "المضاعفات:" : "Complications:"}</span> <span className="font-medium" dir="ltr">{dr.hepatitis.complications_risk?.toFixed(1) || 'N/A'}%</span></div>
                           </div>
                           {dr.hepatitis.advice && <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-blue-200">{dr.hepatitis.advice}</p>}
                         </div>
                       )}
                       {dr.fatty_liver && (
                         <div className="p-4 rounded-lg border border-green-200 bg-green-50/50">
-                          <h4 className="font-semibold text-green-900 text-sm mb-2">Fatty Liver Analysis</h4>
+                          <h4 className="font-semibold text-green-900 text-sm mb-2">
+                            {isAr ? "تحليل الكبد الدهني" : "Fatty Liver Analysis"}
+                          </h4>
                           <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div><span className="text-muted-foreground">Diagnosis:</span> <span className="font-medium">{dr.fatty_liver.diagnosis || 'N/A'}</span></div>
-                            <div><span className="text-muted-foreground">Sick Probability:</span> <span className="font-medium">{dr.fatty_liver.sick_probability?.toFixed(1) || 'N/A'}%</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "التشخيص:" : "Diagnosis:"}</span> <span className="font-medium">{dr.fatty_liver.diagnosis || 'N/A'}</span></div>
+                            <div><span className="text-muted-foreground">{isAr ? "احتمالية المرض:" : "Sick Probability:"}</span> <span className="font-medium" dir="ltr">{dr.fatty_liver.sick_probability?.toFixed(1) || 'N/A'}%</span></div>
                             <div>
-                              <span className="text-muted-foreground">Has Fatty Liver:</span>{' '}
+                              <span className="text-muted-foreground">{isAr ? "مصاب بالكبد الدهني:" : "Has Fatty Liver:"}</span>{' '}
                               <Badge variant="outline" className={dr.fatty_liver.has_fatty_liver ? "bg-red-100 text-red-800 border-red-200" : "bg-green-100 text-green-800 border-green-200"}>
-                                {dr.fatty_liver.has_fatty_liver ? 'Yes' : 'No'}
+                                {dr.fatty_liver.has_fatty_liver ? (isAr ? 'نعم' : 'Yes') : (isAr ? 'لا' : 'No')}
                               </Badge>
                             </div>
                           </div>
@@ -3422,8 +3459,16 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
               {/* â”€â”€ Disclaimer Footer â”€â”€ */}
               <div className="text-center text-[11px] text-muted-foreground border-t-2 border-emerald-500 pt-3 mt-4 space-y-0.5">
-                <p>This report is generated by AI analysis and should not replace professional medical advice.</p>
-                <p>Please consult with a qualified healthcare provider for interpretation and treatment decisions.</p>
+                <p>
+                  {isAr 
+                    ? "تم إنشاء هذا التقرير عبر تحليل الذكاء الاصطناعي ولا يغني عن الاستشارة الطبية المتخصصة."
+                    : "This report is generated by AI analysis and should not replace professional medical advice."}
+                </p>
+                <p>
+                  {isAr
+                    ? "يرجى مراجعة طبيب مؤهل لتفسير النتائج واتخاذ قرارات العلاج."
+                    : "Please consult with a qualified healthcare provider for interpretation and treatment decisions."}
+                </p>
               </div>
             </div>
           )}
@@ -3432,15 +3477,15 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsReportDialogOpen(false)}>
-              Close
+              {isAr ? "إغلاق" : "Close"}
             </Button>
             <Button variant="outline" onClick={printReport} className="gap-2">
               <Printer className="h-4 w-4" />
-              Print
+              {isAr ? "طباعة" : "Print"}
             </Button>
             <Button onClick={exportToPDF} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
               <Download className="h-4 w-4" />
-              Download PDF
+              {isAr ? "تحميل PDF" : "Download PDF"}
             </Button>
           </div>
         </DialogContent>
@@ -3452,13 +3497,13 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              {selectedReference === 'lab-values' && 'Normal Laboratory Values Reference'}
-              {selectedReference === 'drug-dosage' && 'Drug Dosage Guidelines'}
-              {selectedReference === 'vital-signs' && 'Vital Signs Reference'}
-              {selectedReference === 'abbreviations' && 'Medical Abbreviations'}
+              {selectedReference === 'lab-values' && (isAr ? 'مرجع القيم المخبرية الطبيعية' : 'Normal Laboratory Values Reference')}
+              {selectedReference === 'drug-dosage' && (isAr ? 'إرشادات جرعات الأدوية' : 'Drug Dosage Guidelines')}
+              {selectedReference === 'vital-signs' && (isAr ? 'مرجع المؤشرات الحيوية' : 'Vital Signs Reference')}
+              {selectedReference === 'abbreviations' && (isAr ? 'المصطلحات والاختصارات الطبية' : 'Medical Abbreviations')}
             </DialogTitle>
             <DialogDescription>
-              Educational reference guide for healthcare professionals
+              {isAr ? 'دليل مرجعي تعليمي للمتخصصين في الرعاية الصحية' : 'Educational reference guide for healthcare professionals'}
             </DialogDescription>
           </DialogHeader>
 
@@ -3761,7 +3806,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsReferenceModalOpen(false)}>
-              Close
+              {isAr ? "إغلاق" : "Close"}
             </Button>
           </div>
         </DialogContent>
@@ -3773,10 +3818,10 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
-              AI Insight Details
+              {isAr ? "تفاصيل رؤى الذكاء الاصطناعي" : "AI Insight Details"}
             </DialogTitle>
             <DialogDescription>
-              Detailed analysis and recommendations for {selectedInsight?.patient}
+              {isAr ? `التحليل والتوصيات المفصلة لـ ${selectedInsight?.patient}` : `Detailed analysis and recommendations for ${selectedInsight?.patient}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -3784,24 +3829,28 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
             <div className="space-y-6">
               {/* Risk Assessment */}
               <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg border border-red-200">
-                <h3 className="font-semibold text-red-900 mb-2">Risk Assessment</h3>
+                <h3 className="font-semibold text-red-900 mb-2">
+                  {isAr ? "تقييم المخاطر" : "Risk Assessment"}
+                </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-red-700">Risk Level:</span>
+                    <span className="text-red-700">{isAr ? "مستوى الخطر:" : "Risk Level:"}</span>
                     <Badge variant="outline" className="ml-2 border-red-200 text-red-800">
                       {selectedInsight.riskLevel.toUpperCase()}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-red-700">Probability:</span>
-                    <span className="ml-2 font-bold">{selectedInsight.probability}%</span>
+                    <span className="text-red-700">{isAr ? "الاحتمالية:" : "Probability:"}</span>
+                    <span className="ml-2 font-bold" dir="ltr">{selectedInsight.probability}%</span>
                   </div>
                 </div>
               </div>
 
               {/* Contributing Factors */}
               <div>
-                <h3 className="font-semibold mb-3">Contributing Factors</h3>
+                <h3 className="font-semibold mb-3">
+                  {isAr ? "العوامل المؤثرة" : "Contributing Factors"}
+                </h3>
                 <div className="space-y-2">
                   {selectedInsight.factors.map((factor: string, index: number) => (
                     <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
@@ -3814,22 +3863,28 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
               {/* AI Recommendations */}
               <div>
-                <h3 className="font-semibold mb-3">AI Recommendations</h3>
+                <h3 className="font-semibold mb-3">
+                  {isAr ? "توصيات الذكاء الاصطناعي" : "AI Recommendations"}
+                </h3>
                 <div className="space-y-3">
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <h4 className="font-medium text-green-900 mb-1">Immediate Actions</h4>
+                    <h4 className="font-medium text-green-900 mb-1">
+                      {isAr ? "إجراءات فورية" : "Immediate Actions"}
+                    </h4>
                     <ul className="text-sm text-green-800 space-y-1">
-                      <li>â€¢ Schedule follow-up appointment within 7 days</li>
-                      <li>â€¢ Order additional liver function tests</li>
-                      <li>â€¢ Consider ultrasound imaging</li>
+                      <li>• {isAr ? "جدولة موعد متابعة خلال 7 أيام" : "Schedule follow-up appointment within 7 days"}</li>
+                      <li>• {isAr ? "طلب فحوصات إضافية لوظائف الكبد" : "Order additional liver function tests"}</li>
+                      <li>• {isAr ? "دراسة إجراء تصوير بالموجات فوق الصوتية" : "Consider ultrasound imaging"}</li>
                     </ul>
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-1">Preventive Measures</h4>
+                    <h4 className="font-medium text-blue-900 mb-1">
+                      {isAr ? "تدابير وقائية" : "Preventive Measures"}
+                    </h4>
                     <ul className="text-sm text-blue-800 space-y-1">
-                      <li>â€¢ Lifestyle counseling (diet, exercise)</li>
-                      <li>â€¢ Monitor medication compliance</li>
-                      <li>â€¢ Regular health screenings</li>
+                      <li>• {isAr ? "إرشادات تعديل نمط الحياة (الحمية، الرياضة)" : "Lifestyle counseling (diet, exercise)"}</li>
+                      <li>• {isAr ? "مراقبة الالتزام الدوائي بدقة" : "Monitor medication compliance"}</li>
+                      <li>• {isAr ? "فحوصات دورية منتظمة" : "Regular health screenings"}</li>
                     </ul>
                   </div>
                 </div>
@@ -3837,53 +3892,57 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
               {/* Confidence Metrics */}
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3">AI Confidence Metrics</h3>
+                <h3 className="font-semibold mb-3">
+                  {isAr ? "مؤشرات ثقة الذكاء الاصطناعي" : "AI Confidence Metrics"}
+                </h3>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-blue-600">87%</div>
-                    <div className="text-sm text-muted-foreground">Model Accuracy</div>
+                    <div className="text-2xl font-bold text-blue-600" dir="ltr">87%</div>
+                    <div className="text-sm text-muted-foreground">{isAr ? "دقة النموذج" : "Model Accuracy"}</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-green-600">92%</div>
-                    <div className="text-sm text-muted-foreground">Data Quality</div>
+                    <div className="text-2xl font-bold text-green-600" dir="ltr">92%</div>
+                    <div className="text-sm text-muted-foreground">{isAr ? "جودة البيانات" : "Data Quality"}</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-purple-600">95%</div>
-                    <div className="text-sm text-muted-foreground">Prediction Stability</div>
+                    <div className="text-2xl font-bold text-purple-600" dir="ltr">95%</div>
+                    <div className="text-sm text-muted-foreground">{isAr ? "استقرار التنبؤ" : "Prediction Stability"}</div>
                   </div>
                 </div>
               </div>
 
               {/* User Feedback */}
               <div>
-                <h3 className="font-semibold mb-3">Provide Feedback</h3>
+                <h3 className="font-semibold mb-3">
+                  {isAr ? "تقديم التقييم" : "Provide Feedback"}
+                </h3>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     className="flex-1 border-green-200 text-green-700 hover:bg-green-50"
-                    onClick={() => toast.success('Thank you for confirming this insight!')}
+                    onClick={() => toast.success(isAr ? 'شكراً لتأكيدك هذه الرؤية!' : 'Thank you for confirming this insight!')}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-1" />
-                    Accurate
+                    {isAr ? "دقيق" : "Accurate"}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="flex-1 border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-                    onClick={() => toast.success('Feedback noted for AI improvement')}
+                    onClick={() => toast.success(isAr ? 'تم تسجيل ملاحظتك لتحسين الذكاء الاصطناعي' : 'Feedback noted for AI improvement')}
                   >
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    Needs Review
+                    {isAr ? "يحتاج مراجعة" : "Needs Review"}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
-                    onClick={() => toast.success('Feedback submitted for model retraining')}
+                    onClick={() => toast.success(isAr ? 'تم إرسال الملاحظة لإعادة تدريب النموذج' : 'Feedback submitted for model retraining')}
                   >
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    Inaccurate
+                    {isAr ? "غير دقيق" : "Inaccurate"}
                   </Button>
                 </div>
               </div>
@@ -3894,14 +3953,14 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsInsightModalOpen(false)}>
-              Close
+              {isAr ? "إغلاق" : "Close"}
             </Button>
             <Button onClick={() => {
-              toast.success('Report exported successfully')
+              toast.success(isAr ? 'تم تصدير التقرير بنجاح' : 'Report exported successfully')
               setIsInsightModalOpen(false)
             }}>
               <Download className="h-4 w-4 mr-2" />
-              Export Details
+              {isAr ? "تصدير التفاصيل" : "Export Details"}
             </Button>
           </div>
         </DialogContent>
@@ -3928,54 +3987,58 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="h-5 w-5" />
-              {isEditTaskDialogOpen ? 'Edit Task' : 'Add New Task'}
+              {isEditTaskDialogOpen 
+                ? (isAr ? 'تعديل المهمة' : 'Edit Task') 
+                : (isAr ? 'إضافة مهمة جديدة' : 'Add New Task')}
             </DialogTitle>
             <DialogDescription>
-              {isEditTaskDialogOpen ? 'Update task details for patient case management' : 'Create a new task for patient case management'}
+              {isEditTaskDialogOpen 
+                ? (isAr ? 'تحديث تفاصيل المهمة لإدارة حالة المريض' : 'Update task details for patient case management') 
+                : (isAr ? 'إنشاء مهمة جديدة لإدارة حالة المريض' : 'Create a new task for patient case management')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="task-title">Task Title *</Label>
+                <Label htmlFor="task-title">{isAr ? "عنوان المهمة *" : "Task Title *"}</Label>
                 <Input
                   id="task-title"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  placeholder="Enter task title"
+                  placeholder={isAr ? "أدخل عنوان المهمة" : "Enter task title"}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="task-priority">Priority</Label>
+                <Label htmlFor="task-priority">{isAr ? "الأولوية" : "Priority"}</Label>
                 <Select value={newTask.priority} onValueChange={(value: 'high' | 'medium' | 'low') => setNewTask({ ...newTask, priority: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue placeholder={isAr ? "اختر الأولوية" : "Select priority"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="low">{isAr ? "منخفضة" : "Low"}</SelectItem>
+                    <SelectItem value="medium">{isAr ? "متوسطة" : "Medium"}</SelectItem>
+                    <SelectItem value="high">{isAr ? "عالية" : "High"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="task-description">Description</Label>
+              <Label htmlFor="task-description">{isAr ? "الوصف" : "Description"}</Label>
               <Textarea
                 id="task-description"
                 value={newTask.description}
                 onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                placeholder="Enter task description..."
+                placeholder={isAr ? "أدخل وصف المهمة..." : "Enter task description..."}
                 rows={3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="task-patient">Patient *</Label>
+              <Label htmlFor="task-patient">{isAr ? "المريض *" : "Patient *"}</Label>
               <Select value={newTask.patientId} onValueChange={(value) => {
                 const patient = patients.find(p => p.patient_id === value)
                 if (patient) {
@@ -3983,13 +4046,13 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 }
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select patient" />
+                  <SelectValue placeholder={isAr ? "اختر المريض" : "Select patient"} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingPatients ? (
-                    <SelectItem value="" disabled>Loading patients...</SelectItem>
+                    <SelectItem value="" disabled>{isAr ? "جاري تحميل المرضى..." : "Loading patients..."}</SelectItem>
                   ) : patients.length === 0 ? (
-                    <SelectItem value="" disabled>No patients available</SelectItem>
+                    <SelectItem value="" disabled>{isAr ? "لا يوجد مرضى متاحين" : "No patients available"}</SelectItem>
                   ) : (
                     patients
                       .filter(patient => patientAnalyses.some(analysis => analysis.patient_id === patient.id))
@@ -4004,7 +4067,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="task-due-date">Due Date & Time</Label>
+              <Label htmlFor="task-due-date">{isAr ? "تاريخ ووقت الاستحقاق *" : "Due Date & Time *"}</Label>
               <Input
                 id="task-due-date"
                 type="datetime-local"
@@ -4032,14 +4095,16 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 })
               }}
             >
-              Cancel
+              {isAr ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={isEditTaskDialogOpen ? updateTask : addTask}
               className="gradient-primary"
               disabled={!newTask.title.trim() || !newTask.dueDate}
             >
-              {isEditTaskDialogOpen ? 'Update Task' : 'Add Task'}
+              {isEditTaskDialogOpen 
+                ? (isAr ? 'تحديث المهمة' : 'Update Task') 
+                : (isAr ? 'إضافة المهمة' : 'Add Task')}
             </Button>
           </div>
         </DialogContent>
@@ -4051,26 +4116,26 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
-              Schedule New Appointment
+              {isAr ? "جدولة موعد جديد" : "Schedule New Appointment"}
             </DialogTitle>
             <DialogDescription>
-              Create a new appointment for a patient
+              {isAr ? "إنشاء موعد جديد لمريض" : "Create a new appointment for a patient"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="appointment-patient">Patient *</Label>
+                <Label htmlFor="appointment-patient">{isAr ? "المريض *" : "Patient *"}</Label>
                 <Select value={newAppointment.patientId} onValueChange={handlePatientSelect}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select patient" />
+                    <SelectValue placeholder={isAr ? "اختر المريض" : "Select patient"} />
                   </SelectTrigger>
                   <SelectContent>
                     {isLoadingPatients ? (
-                      <SelectItem value="" disabled>Loading patients...</SelectItem>
+                      <SelectItem value="" disabled>{isAr ? "جاري تحميل المرضى..." : "Loading patients..."}</SelectItem>
                     ) : patients.length === 0 ? (
-                      <SelectItem value="" disabled>No patients available</SelectItem>
+                      <SelectItem value="" disabled>{isAr ? "لا يوجد مرضى متاحين" : "No patients available"}</SelectItem>
                     ) : (
                       patients
                         .filter(patient => patientAnalyses.some(analysis => analysis.patient_id === patient.id))
@@ -4085,18 +4150,18 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="appointment-type">Appointment Type *</Label>
+                <Label htmlFor="appointment-type">{isAr ? "نوع الموعد *" : "Appointment Type *"}</Label>
                 <Select value={newAppointment.type} onValueChange={(value) => setNewAppointment({ ...newAppointment, type: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={isAr ? "اختر النوع" : "Select type"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Consultation">Consultation</SelectItem>
-                    <SelectItem value="Follow-up">Follow-up</SelectItem>
-                    <SelectItem value="Check-up">Check-up</SelectItem>
-                    <SelectItem value="Treatment">Treatment</SelectItem>
-                    <SelectItem value="Surgery">Surgery</SelectItem>
-                    <SelectItem value="Emergency">Emergency</SelectItem>
+                    <SelectItem value="Consultation">{isAr ? "استشارة" : "Consultation"}</SelectItem>
+                    <SelectItem value="Follow-up">{isAr ? "متابعة" : "Follow-up"}</SelectItem>
+                    <SelectItem value="Check-up">{isAr ? "فحص دوري" : "Check-up"}</SelectItem>
+                    <SelectItem value="Treatment">{isAr ? "علاج" : "Treatment"}</SelectItem>
+                    <SelectItem value="Surgery">{isAr ? "عملية جراحية" : "Surgery"}</SelectItem>
+                    <SelectItem value="Emergency">{isAr ? "طوارئ" : "Emergency"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -4104,7 +4169,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="appointment-datetime">Date & Time *</Label>
+                <Label htmlFor="appointment-datetime">{isAr ? "التاريخ والوقت *" : "Date & Time *"}</Label>
                 <Input
                   id="appointment-datetime"
                   type="datetime-local"
@@ -4115,7 +4180,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="appointment-duration">Duration (minutes)</Label>
+                <Label htmlFor="appointment-duration">{isAr ? "المدة (بالدقائق)" : "Duration (minutes)"}</Label>
                 <Input
                   id="appointment-duration"
                   type="number"
@@ -4129,20 +4194,20 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appointment-location">Location</Label>
+              <Label htmlFor="appointment-location">{isAr ? "الموقع" : "Location"}</Label>
               <Input
                 id="appointment-location"
-                placeholder="Room number or location"
+                placeholder={isAr ? "رقم الغرفة أو العيادة" : "Room number or location"}
                 value={newAppointment.location}
                 onChange={(e) => setNewAppointment({ ...newAppointment, location: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appointment-notes">Notes</Label>
+              <Label htmlFor="appointment-notes">{isAr ? "ملاحظات" : "Notes"}</Label>
               <Textarea
                 id="appointment-notes"
-                placeholder="Additional notes or special instructions..."
+                placeholder={isAr ? "ملاحظات إضافية أو تعليمات خاصة..." : "Additional notes or special instructions..."}
                 value={newAppointment.notes}
                 onChange={(e) => setNewAppointment({ ...newAppointment, notes: e.target.value })}
                 rows={3}
@@ -4151,16 +4216,16 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
             {newAppointment.patientId && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Patient Details</h4>
+                <h4 className="font-medium text-blue-900 mb-2">{isAr ? "بيانات المريض" : "Patient Details"}</h4>
                 {(() => {
                   const patient = patients.find(p => p.patient_id === newAppointment.patientId)
                   return patient ? (
                     <div className="text-sm text-blue-800 space-y-1">
-                      <div><strong>Name:</strong> {patient.name}</div>
-                      <div><strong>ID:</strong> {patient.patient_id}</div>
-                      {patient.email && <div><strong>Email:</strong> {patient.email}</div>}
-                      {patient.phone && <div><strong>Phone:</strong> {patient.phone}</div>}
-                      {patient.doctor_name && <div><strong>Doctor:</strong> {patient.doctor_name}</div>}
+                      <div><strong>{isAr ? "الاسم:" : "Name:"}</strong> {patient.name}</div>
+                      <div><strong>{isAr ? "الرقم:" : "ID:"}</strong> <span dir="ltr">{patient.patient_id}</span></div>
+                      {patient.email && <div><strong>{isAr ? "البريد الإلكتروني:" : "Email:"}</strong> <span dir="ltr">{patient.email}</span></div>}
+                      {patient.phone && <div><strong>{isAr ? "الهاتف:" : "Phone:"}</strong> <span dir="ltr">{patient.phone}</span></div>}
+                      {patient.doctor_name && <div><strong>{isAr ? "الطبيب:" : "Doctor:"}</strong> {patient.doctor_name}</div>}
                     </div>
                   ) : null
                 })()}
@@ -4186,14 +4251,14 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 })
               }}
             >
-              Cancel
+              {isAr ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={addAppointment}
               className="gradient-primary"
               disabled={!newAppointment.patientId || !newAppointment.patientName || !newAppointment.dateTime || !newAppointment.type}
             >
-              Schedule Appointment
+              {isAr ? "جدولة الموعد" : "Schedule Appointment"}
             </Button>
           </div>
         </DialogContent>
@@ -4205,46 +4270,48 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
-              Reschedule Appointment
+              {isAr ? "إعادة جدولة الموعد" : "Reschedule Appointment"}
             </DialogTitle>
             <DialogDescription>
-              Update the appointment details for {rescheduleAppointmentData?.patientName}
+              {isAr 
+                ? `تحديث تفاصيل الموعد لـ ${rescheduleAppointmentData?.patientName}` 
+                : `Update the appointment details for ${rescheduleAppointmentData?.patientName}`}
             </DialogDescription>
           </DialogHeader>
 
           {rescheduleAppointmentData && (
             <div className="space-y-6 py-4">
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Patient Information</h4>
+                <h4 className="font-medium text-blue-900 mb-2">{isAr ? "معلومات المريض" : "Patient Information"}</h4>
                 <div className="text-sm text-blue-800">
-                  <div><strong>Name:</strong> {rescheduleAppointmentData.patientName}</div>
-                  <div><strong>ID:</strong> {rescheduleAppointmentData.patientId}</div>
+                  <div><strong>{isAr ? "الاسم:" : "Name:"}</strong> {rescheduleAppointmentData.patientName}</div>
+                  <div><strong>{isAr ? "الرقم:" : "ID:"}</strong> <span dir="ltr">{rescheduleAppointmentData.patientId}</span></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reschedule-type">Appointment Type</Label>
+                  <Label htmlFor="reschedule-type">{isAr ? "نوع الموعد" : "Appointment Type"}</Label>
                   <Select
                     value={rescheduleAppointmentData.type}
                     onValueChange={(value) => setRescheduleAppointmentData({ ...rescheduleAppointmentData, type: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={isAr ? "اختر النوع" : "Select type"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Consultation">Consultation</SelectItem>
-                      <SelectItem value="Follow-up">Follow-up</SelectItem>
-                      <SelectItem value="Check-up">Check-up</SelectItem>
-                      <SelectItem value="Treatment">Treatment</SelectItem>
-                      <SelectItem value="Surgery">Surgery</SelectItem>
-                      <SelectItem value="Emergency">Emergency</SelectItem>
+                      <SelectItem value="Consultation">{isAr ? "استشارة" : "Consultation"}</SelectItem>
+                      <SelectItem value="Follow-up">{isAr ? "متابعة" : "Follow-up"}</SelectItem>
+                      <SelectItem value="Check-up">{isAr ? "فحص دوري" : "Check-up"}</SelectItem>
+                      <SelectItem value="Treatment">{isAr ? "علاج" : "Treatment"}</SelectItem>
+                      <SelectItem value="Surgery">{isAr ? "عملية جراحية" : "Surgery"}</SelectItem>
+                      <SelectItem value="Emergency">{isAr ? "طوارئ" : "Emergency"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reschedule-duration">Duration (minutes)</Label>
+                  <Label htmlFor="reschedule-duration">{isAr ? "المدة (بالدقائق)" : "Duration (minutes)"}</Label>
                   <Input
                     id="reschedule-duration"
                     type="number"
@@ -4257,25 +4324,25 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reschedule-status">Status</Label>
+                  <Label htmlFor="reschedule-status">{isAr ? "الحالة" : "Status"}</Label>
                   <Select
                     value={rescheduleAppointmentData.status}
                     onValueChange={(value: 'scheduled' | 'confirmed' | 'cancelled') => setRescheduleAppointmentData({ ...rescheduleAppointmentData, status: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={isAr ? "اختر الحالة" : "Select status"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="scheduled">{isAr ? "مجدول" : "Scheduled"}</SelectItem>
+                      <SelectItem value="confirmed">{isAr ? "مؤكد" : "Confirmed"}</SelectItem>
+                      <SelectItem value="cancelled">{isAr ? "ملغى" : "Cancelled"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="reschedule-datetime">New Date & Time *</Label>
+                <Label htmlFor="reschedule-datetime">{isAr ? "التاريخ والوقت الجديد *" : "New Date & Time *"}</Label>
                 <Input
                   id="reschedule-datetime"
                   type="datetime-local"
@@ -4286,20 +4353,20 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="reschedule-location">Location</Label>
+                <Label htmlFor="reschedule-location">{isAr ? "الموقع" : "Location"}</Label>
                 <Input
                   id="reschedule-location"
-                  placeholder="Room number or location"
+                  placeholder={isAr ? "رقم الغرفة أو العيادة" : "Room number or location"}
                   value={rescheduleAppointmentData.location}
                   onChange={(e) => setRescheduleAppointmentData({ ...rescheduleAppointmentData, location: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="reschedule-notes">Notes</Label>
+                <Label htmlFor="reschedule-notes">{isAr ? "ملاحظات" : "Notes"}</Label>
                 <Textarea
                   id="reschedule-notes"
-                  placeholder="Additional notes or special instructions..."
+                  placeholder={isAr ? "ملاحظات إضافية أو تعليمات خاصة..." : "Additional notes or special instructions..."}
                   value={rescheduleAppointmentData.notes}
                   onChange={(e) => setRescheduleAppointmentData({ ...rescheduleAppointmentData, notes: e.target.value })}
                   rows={3}
@@ -4318,14 +4385,14 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 setRescheduleAppointmentData(null)
               }}
             >
-              Cancel
+              {isAr ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={updateRescheduledAppointment}
               className="gradient-primary"
               disabled={!rescheduleAppointmentData?.dateTime || !rescheduleAppointmentData?.type}
             >
-              Update Appointment
+              {isAr ? "تحديث الموعد" : "Update Appointment"}
             </Button>
           </div>
         </DialogContent>
@@ -4337,10 +4404,10 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Stethoscope className="h-5 w-5" />
-              Case Details - {selectedCase?.patientName}
+              {isAr ? `تفاصيل الحالة - ${selectedCase?.patientName}` : `Case Details - ${selectedCase?.patientName}`}
             </DialogTitle>
             <DialogDescription>
-              Comprehensive information about this patient's active case
+              {isAr ? "معلومات شاملة حول الحالة النشطة لهذا المريض" : "Comprehensive information about this patient's active case"}
             </DialogDescription>
           </DialogHeader>
 
@@ -4348,12 +4415,14 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
             <div className="space-y-6 py-4">
               {/* Patient Information */}
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-900 mb-3">Patient Information</h3>
+                <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                  {isAr ? "معلومات المريض" : "Patient Information"}
+                </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><strong>Name:</strong> {selectedCase.patientName}</div>
-                  <div><strong>ID:</strong> {selectedCase.patientId}</div>
-                  <div><strong>Diagnosis:</strong> {selectedCase.diagnosis}</div>
-                  <div><strong>Status:</strong>
+                  <div><strong>{isAr ? "الاسم:" : "Name:"}</strong> {selectedCase.patientName}</div>
+                  <div><strong>{isAr ? "الرقم:" : "ID:"}</strong> <span dir="ltr">{selectedCase.patientId}</span></div>
+                  <div><strong>{isAr ? "التشخيص:" : "Diagnosis:"}</strong> {selectedCase.diagnosis}</div>
+                  <div><strong>{isAr ? "الحالة:" : "Status:"}</strong>
                     <Badge variant="outline" className={`ml-2 ${selectedCase.status === 'critical' ? 'border-red-200 text-red-800' :
                       selectedCase.status === 'active' ? 'border-blue-200 text-blue-800' :
                         selectedCase.status === 'recovery' ? 'border-green-200 text-green-800' :
@@ -4362,18 +4431,20 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                       {selectedCase.status.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </div>
-                  <div><strong>Doctor:</strong> {selectedCase.assignedDoctor}</div>
-                  <div><strong>Last Update:</strong> {selectedCase.lastUpdate.toLocaleString()}</div>
+                  <div><strong>{isAr ? "الطبيب:" : "Doctor:"}</strong> {selectedCase.assignedDoctor}</div>
+                  <div><strong>{isAr ? "آخر تحديث:" : "Last Update:"}</strong> {selectedCase.lastUpdate.toLocaleString()}</div>
                 </div>
               </div>
 
               {/* Treatment Progress */}
               <div>
-                <h3 className="text-lg font-semibold mb-3">Treatment Progress</h3>
+                <h3 className="text-lg font-semibold mb-3">
+                  {isAr ? "تقدم العلاج" : "Treatment Progress"}
+                </h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Progress</span>
-                    <span className="text-sm font-bold">{Math.round(selectedCase.treatmentProgress)}%</span>
+                    <span className="text-sm font-medium">{isAr ? "التقدم" : "Progress"}</span>
+                    <span className="text-sm font-bold" dir="ltr">{Math.round(selectedCase.treatmentProgress)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
@@ -4387,7 +4458,9 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
               {/* Alerts */}
               {selectedCase.alerts.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">Active Alerts</h3>
+                  <h3 className="text-lg font-semibold mb-3">
+                    {isAr ? "التنبيهات النشطة" : "Active Alerts"}
+                  </h3>
                   <div className="space-y-2">
                     {selectedCase.alerts.map((alert: string, index: number) => (
                       <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -4405,7 +4478,9 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
               {/* Notes Section in Case Details */}
               {selectedCase?.notes && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">Notes</h3>
+                  <h3 className="text-lg font-semibold mb-3">
+                    {isAr ? "الملاحظات" : "Notes"}
+                  </h3>
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <div className="flex items-start gap-2">
                       <FileText className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -4421,7 +4496,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsCaseDetailsDialogOpen(false)}>
-              Close
+              {isAr ? "إغلاق" : "Close"}
             </Button>
           </div>
         </DialogContent>
@@ -4433,17 +4508,17 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="h-5 w-5" />
-              Update Case Information
+              {isAr ? "تحديث معلومات الحالة" : "Update Case Information"}
             </DialogTitle>
             <DialogDescription>
-              Update treatment progress, status, and assigned doctor for this patient case
+              {isAr ? "تحديث تقدم العلاج والحالة والطبيب المعالج لحالة هذا المريض" : "Update treatment progress, status, and assigned doctor for this patient case"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="case-status">Case Status</Label>
+                <Label htmlFor="case-status">{isAr ? "حالة الحالة" : "Case Status"}</Label>
                 <Select
                   value={progressUpdate.status}
                   onValueChange={(value: 'active' | 'critical' | 'recovery' | 'pending_review' | 'finished') =>
@@ -4451,23 +4526,23 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={isAr ? "اختر الحالة" : "Select status"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
-                    <SelectItem value="recovery">Recovery</SelectItem>
-                    <SelectItem value="pending_review">Pending Review</SelectItem>
-                    <SelectItem value="finished">Finished</SelectItem>
+                    <SelectItem value="active">{isAr ? "نشطة" : "Active"}</SelectItem>
+                    <SelectItem value="critical">{isAr ? "حرجة" : "Critical"}</SelectItem>
+                    <SelectItem value="recovery">{isAr ? "تعافي" : "Recovery"}</SelectItem>
+                    <SelectItem value="pending_review">{isAr ? "قيد المراجعة" : "Pending Review"}</SelectItem>
+                    <SelectItem value="finished">{isAr ? "مكتملة" : "Finished"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="assigned-doctor">Assigned Doctor</Label>
+                <Label htmlFor="assigned-doctor">{isAr ? "الطبيب المعالج" : "Assigned Doctor"}</Label>
                 <Input
                   id="assigned-doctor"
-                  placeholder="Dr. Full Name"
+                  placeholder={isAr ? "اسم الطبيب بالكامل" : "Dr. Full Name"}
                   value={progressUpdate.doctor}
                   onChange={(e) => setProgressUpdate({ ...progressUpdate, doctor: e.target.value })}
                 />
@@ -4475,7 +4550,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="progress-slider">Treatment Progress (%)</Label>
+              <Label htmlFor="progress-slider">{isAr ? "نسبة تقدم العلاج (%)" : "Treatment Progress (%)"}</Label>
               <div className="px-2">
                 <input
                   id="progress-slider"
@@ -4488,7 +4563,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>0%</span>
-                  <span className="font-bold text-lg">{progressUpdate.progress}%</span>
+                  <span className="font-bold text-lg" dir="ltr">{progressUpdate.progress}%</span>
                   <span>100%</span>
                 </div>
               </div>
@@ -4496,7 +4571,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="progress-notes">Notes</Label>
+                <Label htmlFor="progress-notes">{isAr ? "الملاحظات" : "Notes"}</Label>
                 {progressUpdate.notes && (
                   <Button
                     type="button"
@@ -4505,20 +4580,20 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                     className="h-6 px-2 text-xs text-red-500 hover:text-red-700"
                     onClick={() => setProgressUpdate({ ...progressUpdate, notes: '' })}
                   >
-                    Clear Notes
+                    {isAr ? "مسح الملاحظات" : "Clear Notes"}
                   </Button>
                 )}
               </div>
               <Textarea
                 id="progress-notes"
-                placeholder="Add notes about this case update... (leave empty to remove existing notes)"
+                placeholder={isAr ? "أضف ملاحظات حول تحديث هذه الحالة..." : "Add notes about this case update... (leave empty to remove existing notes)"}
                 value={progressUpdate.notes}
                 onChange={(e) => setProgressUpdate({ ...progressUpdate, notes: e.target.value })}
                 rows={3}
               />
               {progressUpdate.notes === '' && (
                 <div className="text-xs text-muted-foreground">
-                  Empty notes field will remove any existing notes from this case.
+                  {isAr ? "ترك حقل الملاحظات فارغاً سيزيل أي ملاحظات سابقة من هذه الحالة." : "Empty notes field will remove any existing notes from this case."}
                 </div>
               )}
             </div>
@@ -4534,10 +4609,10 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                 setProgressUpdate({ caseId: '', progress: 0, status: 'active' as 'active' | 'critical' | 'recovery' | 'pending_review' | 'finished', doctor: '', notes: '' })
               }}
             >
-              Cancel
+              {isAr ? "إلغاء" : "Cancel"}
             </Button>
             <Button onClick={saveProgressUpdate} className="gradient-primary">
-              Update Case
+              {isAr ? "تحديث الحالة" : "Update Case"}
             </Button>
           </div>
         </DialogContent>
@@ -4549,13 +4624,13 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Stethoscope className="h-5 w-5" />
-              {selectedDetail?.type === 'general' && 'General Test Result'}
-              {selectedDetail?.type === 'cancer' && 'Cancer Risk Assessment'}
-              {selectedDetail?.type === 'hepatitis' && 'Hepatitis Analysis'}
-              {selectedDetail?.type === 'fatty_liver' && 'Fatty Liver Analysis'}
+              {selectedDetail?.type === 'general' && (isAr ? 'نتيجة الفحص العام' : 'General Test Result')}
+              {selectedDetail?.type === 'cancer' && (isAr ? 'تقييم مخاطر السرطان' : 'Cancer Risk Assessment')}
+              {selectedDetail?.type === 'hepatitis' && (isAr ? 'تحليل التهاب الكبد' : 'Hepatitis Analysis')}
+              {selectedDetail?.type === 'fatty_liver' && (isAr ? 'تحليل الكبد الدهني' : 'Fatty Liver Analysis')}
             </DialogTitle>
             <DialogDescription>
-              Detailed analysis results for {selectedDetail?.type?.replace('_', ' ')}
+              {isAr ? 'نتائج التحليل التفصيلية' : `Detailed analysis results for ${selectedDetail?.type?.replace('_', ' ')}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -4567,21 +4642,27 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary animate-glow">
                       <Activity className="h-4 w-4 text-primary-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold gradient-text">General Test Result</h3>
+                    <h3 className="text-lg font-semibold gradient-text">
+                      {isAr ? "نتيجة الفحص العام" : "General Test Result"}
+                    </h3>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">Diagnosis:</span>
+                      <span className="font-medium">{isAr ? "التشخيص:" : "Diagnosis:"}</span>
                       <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                        Potential Risk Detected
+                        {isAr ? "تم اكتشاف خطر محتمل" : "Potential Risk Detected"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">Confidence:</span>
-                      <span className="text-sm">{selectedDetail.data.confidence ?? 0}%</span>
+                      <span className="font-medium">{isAr ? "مستوى الثقة:" : "Confidence:"}</span>
+                      <span className="text-sm" dir="ltr">{selectedDetail.data.confidence ?? 0}%</span>
                     </div>
                     <div className="pt-2 border-t">
-                      <p className="text-sm text-muted-foreground">General Test indicates potential liver disease risk. Detailed analysis recommended for accurate diagnosis.</p>
+                      <p className="text-sm text-muted-foreground">
+                        {isAr 
+                          ? "يشير الفحص العام إلى وجود خطر محتمل لأمراض الكبد. يُوصى بإجراء تحليل تفصيلي لتشخيص دقيق."
+                          : "General Test indicates potential liver disease risk. Detailed analysis recommended for accurate diagnosis."}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -4608,7 +4689,9 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                       <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${getHepatitisRiskColor(riskLevel)} animate-glow`}>
                         <Activity className={`h-4 w-4 ${getHepatitisRiskIconColor(riskLevel)}`} />
                       </div>
-                      <h3 className="text-lg font-semibold gradient-text">Hepatitis Analysis</h3>
+                      <h3 className="text-lg font-semibold gradient-text">
+                        {isAr ? "تحليل التهاب الكبد" : "Hepatitis Analysis"}
+                      </h3>
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -4619,38 +4702,38 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                                 <CheckCircle2 className="h-4 w-4 text-green-600" />}
                           </div>
                           <div>
-                            <p className="font-semibold text-sm">Stage {selectedDetail.data.stage ?? 0} ({selectedDetail.data.stage_description || 'Unknown'})</p>
-                            <p className="text-xs text-muted-foreground">Fibrosis Assessment</p>
+                            <p className="font-semibold text-sm">{isAr ? "المرحلة" : "Stage"} {selectedDetail.data.stage ?? 0} ({selectedDetail.data.stage_description || 'Unknown'})</p>
+                            <p className="text-xs text-muted-foreground">{isAr ? "تقييم التليف" : "Fibrosis Assessment"}</p>
                           </div>
                         </div>
                         <Badge variant="outline" className={`${getHepatitisRiskColor(riskLevel)} font-semibold text-xs`}>
-                          Stage {selectedDetail.data.stage ?? 0}
+                          {isAr ? "المرحلة" : "Stage"} {selectedDetail.data.stage ?? 0}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="font-medium">Complications Risk</p>
-                          <p className="text-muted-foreground">{selectedDetail.data.complications_risk ?? 0}%</p>
+                          <p className="font-medium">{isAr ? "خطر المضاعفات" : "Complications Risk"}</p>
+                          <p className="text-muted-foreground" dir="ltr">{selectedDetail.data.complications_risk ?? 0}%</p>
                         </div>
                         <div>
-                          <p className="font-medium">Survival Risk</p>
-                          <p className="text-muted-foreground">{selectedDetail.data.mortality_risk ?? 0}%</p>
+                          <p className="font-medium">{isAr ? "خطر الوفاة" : "Survival Risk"}</p>
+                          <p className="text-muted-foreground" dir="ltr">{selectedDetail.data.mortality_risk ?? 0}%</p>
                         </div>
                       </div>
                       <div className="border-t pt-3">
-                        <p className="text-xs font-medium mb-2">Liver Function Scores</p>
+                        <p className="text-xs font-medium mb-2">{isAr ? "مؤشرات وظائف الكبد" : "Liver Function Scores"}</p>
                         <div className="grid grid-cols-2 gap-4 text-xs">
                           <div>
                             <p className="font-medium">APRI Score</p>
-                            <p className="text-muted-foreground">{(selectedDetail.data.apri_score ?? 0).toFixed(2)}</p>
+                            <p className="text-muted-foreground" dir="ltr">{(selectedDetail.data.apri_score ?? 0).toFixed(2)}</p>
                           </div>
                           <div>
                             <p className="font-medium">ALBI Score</p>
-                            <p className="text-muted-foreground">{(selectedDetail.data.albi_score ?? 0).toFixed(2)}</p>
+                            <p className="text-muted-foreground" dir="ltr">{(selectedDetail.data.albi_score ?? 0).toFixed(2)}</p>
                           </div>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{selectedDetail.data.advice || "No advice available"}</p>
+                      <p className="text-sm text-muted-foreground">{selectedDetail.data.advice || (isAr ? "لا توجد نصائح متاحة" : "No advice available")}</p>
                     </div>
                   </div>
                 );
@@ -4662,7 +4745,9 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary animate-glow">
                       <Stethoscope className="h-4 w-4 text-primary-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold gradient-text">Cancer Risk Assessment</h3>
+                    <h3 className="text-lg font-semibold gradient-text">
+                      {isAr ? "تقييم مخاطر السرطان" : "Cancer Risk Assessment"}
+                    </h3>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -4674,8 +4759,8 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                                 <AlertCircle className="h-4 w-4 text-red-600" />}
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">Risk Level: {selectedDetail.data.risk_percentage?.toFixed(1) ?? 0}%</p>
-                          <p className="text-xs text-muted-foreground">5-Tier Assessment</p>
+                          <p className="font-semibold text-sm">{isAr ? "مستوى الخطر:" : "Risk Level:"} <span dir="ltr">{selectedDetail.data.risk_percentage?.toFixed(1) ?? 0}%</span></p>
+                          <p className="text-xs text-muted-foreground">{isAr ? "تقييم خماسي المستويات" : "5-Tier Assessment"}</p>
                         </div>
                       </div>
                       <Badge variant="outline" className={
@@ -4683,11 +4768,11 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                           selectedDetail.data.risk_percentage <= 40 ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
                             selectedDetail.data.risk_percentage <= 50 ? "bg-orange-100 text-orange-800 border-orange-200" :
                               "bg-red-100 text-red-800 border-red-200"
-                      } style={{ fontWeight: 'bold', fontSize: '12px' }}>
+                      } style={{ fontWeight: 'bold', fontSize: '12px' }} dir="ltr">
                         {selectedDetail.data.risk_percentage?.toFixed(1) ?? 0}%
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{selectedDetail.data.advice || "No advice available"}</p>
+                    <p className="text-sm text-muted-foreground">{selectedDetail.data.advice || (isAr ? "لا توجد نصائح متاحة" : "No advice available")}</p>
                   </div>
                 </div>
               )}
@@ -4698,7 +4783,9 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary animate-glow">
                       <TrendingUp className="h-4 w-4 text-primary-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold gradient-text">Fatty Liver Analysis</h3>
+                    <h3 className="text-lg font-semibold gradient-text">
+                      {isAr ? "تحليل الكبد الدهني" : "Fatty Liver Analysis"}
+                    </h3>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -4708,16 +4795,16 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
                         </div>
                         <div>
                           <p className="font-semibold text-sm">{selectedDetail.data.diagnosis || 'Unknown'}</p>
-                          <p className="text-xs text-muted-foreground">Injury Confidence: {selectedDetail.data.confidence?.toFixed(1) ?? 0}%</p>
+                          <p className="text-xs text-muted-foreground">{isAr ? "ثقة الإصابة:" : "Injury Confidence:"} <span dir="ltr">{selectedDetail.data.confidence?.toFixed(1) ?? 0}%</span></p>
                         </div>
                       </div>
                       <Badge variant="outline" className={
                         selectedDetail.data.diagnosis?.toLowerCase().includes('healthy') ? "bg-green-100 text-green-800 border-green-200" : "bg-red-100 text-red-800 border-red-200"
-                      } style={{ fontWeight: 'bold', fontSize: '12px' }}>
+                      } style={{ fontWeight: 'bold', fontSize: '12px' }} dir="ltr">
                         {selectedDetail.data.confidence?.toFixed(1) ?? 0}%
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{selectedDetail.data.advice || "No advice available"}</p>
+                    <p className="text-sm text-muted-foreground">{selectedDetail.data.advice || (isAr ? "لا توجد نصائح متاحة" : "No advice available")}</p>
                   </div>
                 </div>
               )}
@@ -4728,7 +4815,7 @@ export function AdvancedReports({ className }: AdvancedReportsProps) {
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setSelectedDetail(null)}>
-              Close
+              {isAr ? "إغلاق" : "Close"}
             </Button>
           </div>
         </DialogContent>

@@ -399,12 +399,12 @@ export function AiChatbot() {
       </div>
 
       <div className="mt-4 flex flex-col gap-2">
-        <div className="flex flex-wrap gap-2" dir="rtl">
+        <div className="flex flex-wrap gap-2">
           {[
-            { label: 'قائمة مرضاي', text: 'اعرض لي قائمة المرضى الخاصة بي', direct: true },
-            { label: 'بيانات مريض برقم...', text: 'اعرض لي بيانات وسجل المريض برقم: ', direct: false },
-            { label: 'حساب FIB-4 للمريض...', text: 'احسب مؤشر FIB-4 للمريض برقم: ', direct: false },
-            { label: 'آخر تحاليل المريض...', text: 'ما هي آخر تحاليل وفحوصات المريض: ', direct: false },
+            { label: 'My Patients List', text: 'Show me my patient list', direct: true },
+            { label: 'Patient Data by ID...', text: 'Show me patient records for ID: ', direct: false },
+            { label: 'Calculate FIB-4...', text: 'Calculate FIB-4 score for patient ID: ', direct: false },
+            { label: 'Latest Lab Tests...', text: 'What are the latest lab test results for patient ID: ', direct: false },
           ].map((item) => (
             <button
               key={item.label}

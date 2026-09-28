@@ -57,7 +57,10 @@ export interface Patient {
   status: PatientStatus
   createdAt: string | null
   doctorName: string | null
+  chronicConditions: string | null
 }
+
+export type PatientRecord = Patient
 
 /** One visit: a single analysis run against this patient. */
 export interface Visit {
@@ -146,6 +149,7 @@ function toPatient(raw: any): Patient {
     status: raw?.status === 'archived' ? 'archived' : 'active',
     createdAt: orNull(raw?.created_at),
     doctorName: orNull(raw?.doctor_name),
+    chronicConditions: orNull(raw?.chronic_conditions),
   }
 }
 

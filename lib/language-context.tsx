@@ -1,25 +1,54 @@
 "use client"
 
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useEffect, ReactNode } from 'react'
 import { Language, TranslationKey, translations } from './i18n'
 
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (key: TranslationKey) => string
+  toggleLanguage: () => void
+  t: (key: TranslationKey, fallback?: string) => string
+  isRtl: boolean
+  dir: 'ltr'
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en')
+const STORAGE_KEY = 'hepatiq.language'
 
-  const t = (key: TranslationKey): string => {
-    return translations[language][key] || key
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+      document.cookie = `${STORAGE_KEY}=en; path=/; max-age=0`
+      if (typeof document !== 'undefined') {
+        document.documentElement.dir = 'ltr'
+        document.documentElement.lang = 'en'
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const setLanguage = () => {}
+  const toggleLanguage = () => {}
+
+  const t = (key: TranslationKey, fallback?: string): string => {
+    const dict = translations.en
+    return dict[key] ?? fallback ?? key
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider
+      value={{
+        language: 'en',
+        setLanguage,
+        toggleLanguage,
+        t,
+        isRtl: false,
+        dir: 'ltr',
+      }}
+    >
       {children}
     </LanguageContext.Provider>
   )
