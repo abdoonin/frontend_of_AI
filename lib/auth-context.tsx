@@ -29,6 +29,11 @@ export interface AuthUser {
   fullName: string
   role: string
   permissions: UserPermissions
+  subscriptionPlan?: string | null
+  subscriptionMonths?: number | null
+  subscriptionPrice?: number | null
+  subscriptionExpiresAt?: string | null
+  createdAt?: string | null
 }
 
 interface AuthContextType {

@@ -6,6 +6,7 @@ import { AppShell } from "@/components/shell/app-shell"
 import { AuthGuard } from "@/components/auth-guard"
 import { useAuth, type UserPermissions } from "@/lib/auth-context"
 import { apiFetch, cn } from "@/lib/utils"
+import { getSubscriptionDetails } from "@/lib/subscription"
 import { format } from "date-fns"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -434,19 +435,43 @@ function UsersTab() {
                                         </Badge>
                                     </td>
                                     <td className="p-3">
-                                        {u.role === "doctor" || u.subscriptionPlan ? (
-                                            <div className="space-y-0.5">
-                                                <span className="inline-flex items-center gap-1 font-semibold text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                                    <CreditCard className="w-3 h-3" />
-                                                    {u.subscriptionMonths === 12 ? "1 Year" : `${u.subscriptionMonths || 1} Mo`} (${u.subscriptionPrice ?? 20})
-                                                </span>
-                                                {u.subscriptionExpiresAt && (
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        Exp: {format(new Date(u.subscriptionExpiresAt), "d MMM yyyy")}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        ) : (
+                                        {u.role === "doctor" || u.subscriptionPlan ? (() => {
+                                            const sub = getSubscriptionDetails({
+                                                role: u.role,
+                                                subscriptionPlan: u.subscriptionPlan,
+                                                subscriptionMonths: u.subscriptionMonths,
+                                                subscriptionPrice: u.subscriptionPrice,
+                                                subscriptionExpiresAt: u.subscriptionExpiresAt,
+                                                createdAt: u.createdAt,
+                                            })
+                                            return (
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="inline-flex items-center gap-1 font-semibold text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                            <CreditCard className="w-3 h-3" />
+                                                            {sub?.planNameAr || `${u.subscriptionMonths || 1} Mo`} (${u.subscriptionPrice ?? 20})
+                                                        </span>
+                                                        {sub && (
+                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${
+                                                                sub.isExpired
+                                                                    ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+                                                                    : sub.isExpiringSoon
+                                                                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 animate-pulse font-bold"
+                                                                    : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
+                                                            }`}>
+                                                                {sub.isExpired ? "منتهي" : sub.isExpiringSoon ? `⚠️ باقي ${sub.remainingDays} يوم!` : `باقي ${sub.remainingDays} يوم`}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {u.subscriptionExpiresAt && (
+                                                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                            <Calendar className="w-2.5 h-2.5" />
+                                                            Exp: {format(new Date(u.subscriptionExpiresAt), "d MMM yyyy")}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )
+                                        })() : (
                                             <span className="text-xs text-muted-foreground">—</span>
                                         )}
                                     </td>
@@ -797,9 +822,18 @@ function UserFormModal({ mode, user, onClose, onSuccess }: UserFormModalProps) {
                                     className="h-8 w-24 bg-field text-xs font-mono font-bold"
                                 />
                             </div>
-                            <div className="text-muted-foreground text-[11px] flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Valid for {subscriptionMonths} month(s) from activation</span>
+                            <div className="text-muted-foreground text-[11px] flex flex-col sm:flex-row sm:items-center gap-2">
+                                <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-medium">
+                                    <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>
+                                        صلاحية: {subscriptionMonths} شهر (ينتهي في {format(new Date(Date.now() + subscriptionMonths * 30 * 24 * 60 * 60 * 1000), "d MMMM yyyy")})
+                                    </span>
+                                </span>
+                                {mode === "edit" && user?.subscriptionExpiresAt && (
+                                    <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">
+                                        الحالي: {format(new Date(user.subscriptionExpiresAt), "d MMM yyyy")}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>

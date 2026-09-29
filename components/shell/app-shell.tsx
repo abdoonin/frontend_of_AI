@@ -26,10 +26,14 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import { useState } from 'react'
 import { Nav } from './nav'
 import { UserMenu } from './user-menu'
 import { ThemeToggle } from './theme-toggle'
 import { useLanguage } from '@/lib/language-context'
+import { useAuth } from '@/lib/auth-context'
+import { getSubscriptionDetails, SUPPORT_EMAIL, formatRemainingDaysAr } from '@/lib/subscription'
+import { AlertTriangle, AlertCircle, X } from 'lucide-react'
 
 /**
  * The design system specifies a 272px rail; shadcn's default is 16rem (256px).
@@ -37,7 +41,6 @@ import { useLanguage } from '@/lib/language-context'
  * by reading its computed `--sidebar-width`.
  */
 const SIDEBAR_WIDTH = '17rem'
-
 
 export function AppShell({
   children,
@@ -48,6 +51,9 @@ export function AppShell({
   breadcrumb?: string[]
 }) {
   const { isRtl, t } = useLanguage()
+  const { user } = useAuth()
+  const sub = getSubscriptionDetails(user)
+  const [dismissBanner, setDismissBanner] = useState(false)
 
   return (
     <SidebarProvider style={{ '--sidebar-width': SIDEBAR_WIDTH } as React.CSSProperties}>
@@ -151,6 +157,49 @@ export function AppShell({
           <span className="flex-1" />
           <ThemeToggle />
         </header>
+
+        {/* ─── Doctor Subscription Alert Banner (Last 10 Days or Expired) ─── */}
+        {sub && !dismissBanner && (sub.isExpiringSoon || sub.isExpired) && (
+          <div
+            role="alert"
+            className={`px-5 py-2.5 flex items-center justify-between gap-3 text-xs border-b backdrop-blur-sm transition-all duration-200 ${
+              sub.isExpired
+                ? 'bg-rose-500/15 border-rose-500/30 text-rose-800 dark:text-rose-200'
+                : 'bg-amber-500/15 border-amber-500/30 text-amber-900 dark:text-amber-200'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+              {sub.isExpired ? (
+                <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              ) : (
+                <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              )}
+              <span className="font-semibold">
+                {isRtl
+                  ? sub.isExpired
+                    ? `تنبيه: انتهت صلاحية اشتراك الطبيب (${sub.planNameAr}). يرجى التواصل للتجديد:`
+                    : `تنبيه: باقي ${formatRemainingDaysAr(sub.remainingDays)} فقط على انتهاء اشتراكك (${sub.planNameAr}) - ينتهي في ${sub.formattedExpiresAt}. للتجديد تواصل معنا:`
+                  : sub.isExpired
+                  ? `Alert: Your doctor subscription (${sub.planNameEn}) has expired. Please renew:`
+                  : `Warning: Only ${sub.remainingDays} days left on your subscription (${sub.planNameEn}) - expires on ${sub.formattedExpiresAtEn}. For renewal:`}
+              </span>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=Doctor Subscription Renewal`}
+                className="font-mono font-bold underline hover:opacity-80 inline-flex items-center gap-1 text-primary"
+              >
+                {SUPPORT_EMAIL}
+              </a>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDismissBanner(true)}
+              className="p-1 rounded-md hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+              title={isRtl ? 'إغلاق التنبيه' : 'Dismiss notice'}
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        )}
 
         {/*
           1440, not 1180. On a 1080p laptop 1180 left ~250px of dead ground on
