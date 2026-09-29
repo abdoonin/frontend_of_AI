@@ -69,36 +69,45 @@ export function DailyClosingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[760px] w-[95vw] max-h-[92vh] overflow-y-auto bg-white text-black !p-0 rounded-2xl print:p-0 print:m-0 print:border-none print:shadow-none">
-        <DialogHeader className="p-5 pb-3 border-b border-gray-200 print:hidden flex flex-row items-center justify-between">
-          <DialogTitle className="text-base font-bold text-gray-900">
-            Clinic Daily Closing Statement (Shift Settlement)
-          </DialogTitle>
+      <DialogContent className="!max-w-[780px] w-[95vw] max-h-[92vh] overflow-y-auto bg-card text-card-foreground border border-border shadow-2xl !p-0 rounded-2xl print:p-0 print:m-0 print:border-none print:shadow-none">
+        <DialogHeader className="p-4 sm:p-5 pb-3 border-b border-border print:hidden flex flex-row items-center justify-between bg-muted/40">
+          <div>
+            <DialogTitle className="text-base font-bold text-foreground">
+              Clinic Daily Closing Statement (Shift Settlement)
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Official End-of-Day Financial Audit & Revenue Split Report
+            </p>
+          </div>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
               onClick={handleDownloadPdf}
               disabled={downloading}
-              className="gap-1.5 h-8 text-xs font-semibold border-emerald-600/30 text-emerald-700 hover:bg-emerald-50"
+              className="gap-1.5 h-8 text-xs font-semibold border-emerald-600/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
             >
               {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              {downloading ? 'PDF...' : 'PDF'}
+              {downloading ? 'PDF...' : 'PDF (A5)'}
             </Button>
             <Button
               size="sm"
               onClick={handlePrint}
               disabled={printing}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-8 text-xs font-semibold"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-8 text-xs font-semibold shadow-xs"
             >
               {printing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
-              {printing ? 'Preparing...' : 'Print'}
+              {printing ? 'Preparing...' : 'Print (A5)'}
             </Button>
           </div>
         </DialogHeader>
 
-        {/* Printable Shift Sheet */}
-        <div id="daily-closing-sheet" className="p-8 space-y-6 text-sm text-gray-900 bg-white">
+        {/* Printable Shift Sheet Stage */}
+        <div className="p-3 sm:p-6 flex justify-center bg-muted/20">
+          <div
+            id="daily-closing-sheet"
+            className="w-full max-w-[680px] p-6 sm:p-8 space-y-6 text-sm text-slate-900 bg-white rounded-xl shadow-md border border-slate-200/90 font-sans"
+          >
           {/* Header */}
           <div className="flex justify-between items-start border-b-2 border-emerald-700 pb-4">
             <div className="flex items-start gap-3">
@@ -253,17 +262,18 @@ export function DailyClosingModal({
             </div>
           </div>
         </div>
+      </div>
 
-        <DialogFooter className="p-4 bg-gray-50 border-t border-gray-200 print:hidden flex justify-between">
+        <DialogFooter className="p-4 bg-muted/30 border-t border-border print:hidden flex justify-between">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="text-xs">
             Close
           </Button>
           <Button
             size="sm"
             onClick={handlePrint}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs font-semibold"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs font-semibold shadow-xs"
           >
-            <Printer className="h-3.5 w-3.5" /> Print Settlement Sheet
+            <Printer className="h-3.5 w-3.5" /> Print Settlement Sheet (A5)
           </Button>
         </DialogFooter>
       </DialogContent>

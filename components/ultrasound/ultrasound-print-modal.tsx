@@ -62,24 +62,29 @@ export function UltrasoundPrintModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[880px] sm:!max-w-[880px] w-[92vw] h-[90vh] max-h-[900px] overflow-y-auto bg-white text-black !p-0 rounded-2xl print:p-0 print:m-0 print:border-none print:shadow-none">
-        <DialogHeader className="p-6 pb-2 border-b border-gray-200 print:hidden">
+      <DialogContent className="!max-w-[880px] sm:!max-w-[880px] w-[92vw] h-[90vh] max-h-[900px] overflow-y-auto bg-card text-card-foreground border border-border shadow-2xl !p-0 rounded-2xl print:p-0 print:m-0 print:border-none print:shadow-none">
+        <DialogHeader className="p-4 sm:p-6 pb-3 border-b border-border print:hidden bg-muted/40">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-bold text-gray-900">
-              Ultrasound & Imaging Clinical Report
-            </DialogTitle>
+            <div>
+              <DialogTitle className="text-lg font-bold text-foreground">
+                Ultrasound & Imaging Clinical Report
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Official Clinical Sonography & Elastography Audit
+              </p>
+            </div>
             <div className="flex gap-2">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleDownloadPdf}
                 disabled={downloading}
-                className="gap-1.5 text-xs border-emerald-600/30 text-emerald-700 hover:bg-emerald-50"
+                className="gap-1.5 text-xs border-emerald-600/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
               >
                 {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 {downloading ? 'Saving PDF...' : 'Download PDF'}
               </Button>
-              <Button size="sm" onClick={handlePrint} disabled={printing} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs">
+              <Button size="sm" onClick={handlePrint} disabled={printing} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs shadow-xs">
                 {printing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
                 {printing ? 'Preparing...' : 'Print Report'}
               </Button>
@@ -87,8 +92,12 @@ export function UltrasoundPrintModal({
           </div>
         </DialogHeader>
 
-        {/* Printable Document Sheet */}
-        <div id="ultrasound-report-sheet" className="p-8 space-y-6 text-sm text-gray-900 bg-white">
+        {/* Printable Document Sheet Stage */}
+        <div className="p-3 sm:p-6 flex justify-center bg-muted/20">
+          <div
+            id="ultrasound-report-sheet"
+            className="w-full max-w-[820px] p-6 sm:p-8 space-y-6 text-sm text-slate-900 bg-white rounded-xl shadow-md border border-slate-200/90 font-sans"
+          >
           {/* Header */}
           <div className="flex justify-between items-start border-b-2 border-emerald-700 pb-4">
             <div>
@@ -262,12 +271,13 @@ export function UltrasoundPrintModal({
             </div>
           </div>
         </div>
+      </div>
 
-        <DialogFooter className="p-4 bg-gray-50 border-t border-gray-200 print:hidden">
+        <DialogFooter className="p-4 bg-muted/30 border-t border-border print:hidden">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <Button onClick={handlePrint} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
+          <Button onClick={handlePrint} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs">
             <Printer className="h-4 w-4" /> Print Document
           </Button>
         </DialogFooter>
