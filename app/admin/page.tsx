@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { AppShell } from "@/components/shell/app-shell"
 import { AuthGuard } from "@/components/auth-guard"
 import { useAuth, type UserPermissions } from "@/lib/auth-context"
-import { apiFetch } from "@/lib/utils"
+import { apiFetch, cn } from "@/lib/utils"
+import { format } from "date-fns"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,6 +36,8 @@ import {
     Eye,
     EyeOff,
     Trash2,
+    CreditCard,
+    Calendar,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -81,6 +84,60 @@ const PERMISSION_GROUPS = [
 ]
 
 // ─────────────────────────────────────────────────────────
+// Subscription Plans Definition
+// ─────────────────────────────────────────────────────────
+interface SubscriptionPlanOption {
+    id: "monthly" | "quarterly" | "biannual" | "yearly"
+    labelEn: string
+    labelAr: string
+    months: number
+    priceUsd: number
+    monthlyEquivalent: number
+    badge?: string
+    discount?: string
+}
+
+const SUBSCRIPTION_PLANS: SubscriptionPlanOption[] = [
+    {
+        id: "monthly",
+        labelEn: "1 Month",
+        labelAr: "شهري (1 شهر)",
+        months: 1,
+        priceUsd: 20,
+        monthlyEquivalent: 20,
+    },
+    {
+        id: "quarterly",
+        labelEn: "3 Months",
+        labelAr: "فصلي (3 أشهر)",
+        months: 3,
+        priceUsd: 55,
+        monthlyEquivalent: 18.33,
+        discount: "Save $5",
+    },
+    {
+        id: "biannual",
+        labelEn: "6 Months",
+        labelAr: "نصف سنوي (6 أشهر)",
+        months: 6,
+        priceUsd: 100,
+        monthlyEquivalent: 16.66,
+        badge: "Popular",
+        discount: "Save $20",
+    },
+    {
+        id: "yearly",
+        labelEn: "1 Year",
+        labelAr: "سنوي (12 شهر)",
+        months: 12,
+        priceUsd: 190,
+        monthlyEquivalent: 15.83,
+        badge: "Best Value",
+        discount: "Save $50",
+    },
+]
+
+// ─────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────
 interface AdminUser {
@@ -91,6 +148,10 @@ interface AdminUser {
     role: string
     isActive: boolean
     permissions: Record<string, boolean>
+    subscriptionPlan?: string | null
+    subscriptionMonths?: number | null
+    subscriptionPrice?: number | null
+    subscriptionExpiresAt?: string | null
     lastLogin: string | null
     createdAt: string | null
 }
@@ -350,6 +411,7 @@ function UsersTab() {
                                 <th className="text-left p-3 font-medium text-muted-foreground">User</th>
                                 <th className="text-left p-3 font-medium text-muted-foreground">Role</th>
                                 <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
+                                <th className="text-left p-3 font-medium text-muted-foreground">Subscription</th>
                                 <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Last Login</th>
                                 <th className="text-right p-3 font-medium text-muted-foreground">Actions</th>
                             </tr>
@@ -370,6 +432,23 @@ function UsersTab() {
                                         <Badge variant={u.isActive ? "default" : "destructive"} className="text-xs">
                                             {u.isActive ? "Active" : "Disabled"}
                                         </Badge>
+                                    </td>
+                                    <td className="p-3">
+                                        {u.role === "doctor" || u.subscriptionPlan ? (
+                                            <div className="space-y-0.5">
+                                                <span className="inline-flex items-center gap-1 font-semibold text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                    <CreditCard className="w-3 h-3" />
+                                                    {u.subscriptionMonths === 12 ? "1 Year" : `${u.subscriptionMonths || 1} Mo`} (${u.subscriptionPrice ?? 20})
+                                                </span>
+                                                {u.subscriptionExpiresAt && (
+                                                    <p className="text-[10px] text-muted-foreground">
+                                                        Exp: {format(new Date(u.subscriptionExpiresAt), "d MMM yyyy")}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">—</span>
+                                        )}
                                     </td>
                                     <td className="p-3 hidden md:table-cell text-xs text-muted-foreground">
                                         {u.lastLogin ? new Date(u.lastLogin).toLocaleString() : "Never"}
@@ -446,6 +525,17 @@ function UserFormModal({ mode, user, onClose, onSuccess }: UserFormModalProps) {
     const [presets, setPresets] = useState<Record<string, Record<string, boolean>> | null>(null)
     const [emailError, setEmailError] = useState("")
 
+    // Doctor Subscription Plan States (defaults: 1 month @ $20)
+    const [subscriptionPlan, setSubscriptionPlan] = useState<string>(user?.subscriptionPlan || "monthly")
+    const [subscriptionMonths, setSubscriptionMonths] = useState<number>(user?.subscriptionMonths || 1)
+    const [subscriptionPrice, setSubscriptionPrice] = useState<number>(user?.subscriptionPrice ?? 20)
+
+    const handleSelectPlan = (plan: SubscriptionPlanOption) => {
+        setSubscriptionPlan(plan.id)
+        setSubscriptionMonths(plan.months)
+        setSubscriptionPrice(plan.priceUsd)
+    }
+
     // Fetch presets
     useEffect(() => {
         apiFetch("/admin/permission-presets")
@@ -515,7 +605,17 @@ function UserFormModal({ mode, user, onClose, onSuccess }: UserFormModalProps) {
                 }
                 const r = await apiFetch("/auth/register", {
                     method: "POST",
-                    body: JSON.stringify({ username, email, password, full_name: fullName || null, role, permissions: perms }),
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        password,
+                        full_name: fullName || null,
+                        role,
+                        permissions: perms,
+                        subscription_plan: subscriptionPlan,
+                        subscription_months: subscriptionMonths,
+                        subscription_price: subscriptionPrice,
+                    }),
                 })
                 const d = await r.json()
                 if (d.success) {
@@ -525,7 +625,16 @@ function UserFormModal({ mode, user, onClose, onSuccess }: UserFormModalProps) {
                     toast.error(d.detail || "Failed to create user")
                 }
             } else {
-                const body: Record<string, any> = { full_name: fullName, email, role, is_active: isActive, permissions: perms }
+                const body: Record<string, any> = {
+                    full_name: fullName,
+                    email,
+                    role,
+                    is_active: isActive,
+                    permissions: perms,
+                    subscription_plan: subscriptionPlan,
+                    subscription_months: subscriptionMonths,
+                    subscription_price: subscriptionPrice,
+                }
                 if (password) body.password = password
                 const r = await apiFetch(`/admin/users/${user!.id}`, {
                     method: "PUT",
@@ -612,6 +721,87 @@ function UserFormModal({ mode, user, onClose, onSuccess }: UserFormModalProps) {
                                 <Switch checked={isActive} onCheckedChange={setIsActive} />
                             </div>
                         )}
+                    </div>
+
+                    {/* Doctor Subscription Plan Picker */}
+                    <div className="space-y-3 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                <h4 className="font-semibold text-sm text-foreground">
+                                    Doctor Subscription Plan / باقة اشتراك الطبيب
+                                </h4>
+                            </div>
+                            <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                Starts at $20/month
+                            </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            حدد باقة الاشتراك للطبيب (تبدأ من 20 دولار شهرياً)
+                        </p>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                            {SUBSCRIPTION_PLANS.map((plan) => {
+                                const isSelected = subscriptionMonths === plan.months
+                                return (
+                                    <button
+                                        key={plan.id}
+                                        type="button"
+                                        onClick={() => handleSelectPlan(plan)}
+                                        className={cn(
+                                            "relative flex flex-col items-center justify-between p-3 rounded-xl border text-center transition-all cursor-pointer",
+                                            isSelected
+                                                ? "border-emerald-600 bg-emerald-500/15 dark:bg-emerald-950/40 ring-2 ring-emerald-500/30 shadow-xs"
+                                                : "border-border/60 bg-card hover:bg-muted/40 hover:border-border"
+                                        )}
+                                    >
+                                        {plan.badge && (
+                                            <span className="absolute -top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
+                                                {plan.badge}
+                                            </span>
+                                        )}
+                                        <span className="text-xs font-bold text-foreground">
+                                            {plan.labelAr}
+                                        </span>
+                                        <span className="text-[11px] text-muted-foreground mt-0.5">
+                                            {plan.labelEn}
+                                        </span>
+                                        <div className="mt-2 text-center">
+                                            <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                                                ${plan.priceUsd}
+                                            </span>
+                                            <span className="text-[10px] text-muted-foreground block">
+                                                ${plan.monthlyEquivalent.toFixed(1)}/mo
+                                            </span>
+                                        </div>
+                                        {plan.discount && (
+                                            <span className="mt-1.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                                {plan.discount}
+                                            </span>
+                                        )}
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        {/* Custom Price Adjustment & Expiry Preview */}
+                        <div className="pt-2 border-t border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                            <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Fee Amount ($):</span>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    step="5"
+                                    value={subscriptionPrice}
+                                    onChange={(e) => setSubscriptionPrice(parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-24 bg-field text-xs font-mono font-bold"
+                                />
+                            </div>
+                            <div className="text-muted-foreground text-[11px] flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Valid for {subscriptionMonths} month(s) from activation</span>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Permission Toggles */}
