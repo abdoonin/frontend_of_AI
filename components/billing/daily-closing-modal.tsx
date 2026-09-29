@@ -44,6 +44,7 @@ export function DailyClosingModal({
       setPrinting(true)
       await printElement('daily-closing-sheet', {
         title: `Closing Statement - ${date}`,
+        paperSize: 'a5',
       })
     } catch (e) {
       window.print()
@@ -56,7 +57,7 @@ export function DailyClosingModal({
     try {
       setDownloading(true)
       const fileName = `Daily_Closing_Settlement_${date}.pdf`
-      await downloadElementAsPdf('daily-closing-sheet', fileName)
+      await downloadElementAsPdf('daily-closing-sheet', fileName, { paperSize: 'a5' })
     } finally {
       setDownloading(false)
     }

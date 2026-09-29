@@ -18,20 +18,61 @@ export interface PdfOptions {
 }
 
 /**
- * Print a specific DOM element in an isolated hidden iframe.
- * Guarantees zero leakage of app shell, dialogs, overlays, or extra pages.
+ * Print a specific DOM element using high-res snapshot rendering in an isolated hidden iframe.
+ * Guarantees 100% identical styling, colors, and layout to the PDF download,
+ * with zero leakage of app shell, dialogs, overlays, or extra pages.
  */
-export function printElement(elementId: string, options?: PrintOptions): Promise<void> {
-  return new Promise((resolve) => {
-    const target = document.getElementById(elementId)
-    if (!target) {
-      console.error(`Print target #${elementId} not found`)
-      window.print()
-      resolve()
-      return
-    }
+export async function printElement(elementId: string, options?: PrintOptions): Promise<void> {
+  const target = document.getElementById(elementId)
+  if (!target) {
+    console.error(`Print target #${elementId} not found`)
+    window.print()
+    return
+  }
 
-    // Create a temporary hidden iframe
+  const title = options?.title || "Clinical Document - HEPATIQ"
+  const orientation = options?.pageOrientation || "portrait"
+  const paperSize = options?.paperSize || "a5"
+  const isA5 = paperSize.toLowerCase() === "a5"
+  const renderWidth = isA5 ? 560 : 794 // 560px for A5, 794px for A4
+
+  // Clone element temporarily for high-res snapshot to capture 100% computed styles
+  const clone = target.cloneNode(true) as HTMLElement
+  clone.style.width = `${renderWidth}px`
+  clone.style.maxWidth = `${renderWidth}px`
+  clone.style.minHeight = "auto"
+  clone.style.position = "fixed"
+  clone.style.left = "-9999px"
+  clone.style.top = "0"
+  clone.style.background = "#ffffff"
+  clone.style.color = "#0f172a"
+  clone.style.padding = isA5 ? "16px 20px" : "24px 32px"
+  clone.style.boxShadow = "none"
+  clone.style.border = "none"
+  document.body.appendChild(clone)
+
+  let imgData = ""
+  try {
+    const canvas = await html2canvas(clone, {
+      scale: 2.5, // Crisp retina print quality
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+      windowWidth: renderWidth,
+    })
+    imgData = canvas.toDataURL("image/png")
+  } catch (err) {
+    console.error("Print snapshot generation failed, falling back to window.print():", err)
+    window.print()
+    return
+  } finally {
+    if (document.body.contains(clone)) {
+      document.body.removeChild(clone)
+    }
+  }
+
+  // Create temporary hidden iframe to host the print preview
+  return new Promise((resolve) => {
     const iframeId = `print-iframe-${Date.now()}`
     const iframe = document.createElement("iframe")
     iframe.id = iframeId
@@ -46,26 +87,15 @@ export function printElement(elementId: string, options?: PrintOptions): Promise
 
     const doc = iframe.contentWindow?.document
     if (!doc) {
-      document.body.removeChild(iframe)
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe)
+      }
       window.print()
       resolve()
       return
     }
 
-    // Extract all stylesheets
-    let stylesHtml = ""
-    document.querySelectorAll('link[rel="stylesheet"], style').forEach((node) => {
-      stylesHtml += node.outerHTML
-    })
-
-    const title = options?.title || "Clinical Document - HEPATIQ"
-    const orientation = options?.pageOrientation || "portrait"
-    const paperSize = options?.paperSize || "a5"
-
-    const isA5 = paperSize.toLowerCase() === "a5"
     const pageSizeCss = isA5 ? `A5 ${orientation}` : `A4 ${orientation}`
-    const pageMarginCss = isA5 ? `5mm 6mm` : `8mm 10mm`
-    const fontSizeCss = isA5 ? `10.5px` : `12px`
 
     doc.open()
     doc.write(`
@@ -75,52 +105,57 @@ export function printElement(elementId: string, options?: PrintOptions): Promise
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>${title}</title>
-          ${stylesHtml}
           <style>
             @page {
               size: ${pageSizeCss};
-              margin: ${pageMarginCss};
+              margin: 0;
             }
             * {
+              box-sizing: border-box !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
-              box-sizing: border-box !important;
             }
             html, body {
               margin: 0 !important;
               padding: 0 !important;
-              background: #ffffff !important;
-              color: #0f172a !important;
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-              font-size: ${fontSizeCss} !important;
-              line-height: 1.35 !important;
-            }
-            #${elementId} {
-              box-shadow: none !important;
-              border: none !important;
               width: 100% !important;
-              max-width: 100% !important;
-              margin: 0 auto !important;
-              padding: 0 !important;
+              min-height: 100% !important;
               background: #ffffff !important;
+            }
+            .print-page-wrapper {
+              width: 100%;
+              min-height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              padding: ${isA5 ? "4mm 5mm" : "6mm 8mm"};
+              box-sizing: border-box;
+            }
+            img {
+              width: 100%;
+              max-width: 100%;
+              height: auto;
+              max-height: calc(100vh - ${isA5 ? "8mm" : "12mm"});
+              object-fit: contain;
+              display: block;
+              margin: 0 auto;
               page-break-inside: avoid !important;
               page-break-after: avoid !important;
-            }
-            .no-print {
-              display: none !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
           </style>
         </head>
         <body>
-          <div id="${elementId}">
-            ${target.innerHTML}
+          <div class="print-page-wrapper">
+            <img id="print-snapshot-img" src="${imgData}" alt="Medical Document" />
           </div>
         </body>
       </html>
     `)
     doc.close()
 
-    setTimeout(() => {
+    const triggerPrint = () => {
       try {
         iframe.contentWindow?.focus()
         iframe.contentWindow?.print()
@@ -134,9 +169,21 @@ export function printElement(elementId: string, options?: PrintOptions): Promise
           if (document.body.contains(iframe)) {
             document.body.removeChild(iframe)
           }
-        }, 1500)
+        }, 2000)
       }
-    }, 400)
+    }
+
+    const printImg = doc.getElementById("print-snapshot-img") as HTMLImageElement | null
+    if (printImg) {
+      if (printImg.complete) {
+        setTimeout(triggerPrint, 150)
+      } else {
+        printImg.onload = () => setTimeout(triggerPrint, 150)
+        printImg.onerror = () => triggerPrint()
+      }
+    } else {
+      setTimeout(triggerPrint, 300)
+    }
   })
 }
 
