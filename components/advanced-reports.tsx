@@ -35,7 +35,7 @@ import {
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
+import html2canvas from 'html2canvas-pro'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import { usePatients } from "@/lib/analysis-context"

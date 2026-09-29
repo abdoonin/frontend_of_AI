@@ -5,7 +5,7 @@
  */
 
 import jsPDF from "jspdf"
-import html2canvas from "html2canvas"
+import html2canvas from "html2canvas-pro"
 
 export interface PrintOptions {
   title?: string
@@ -213,6 +213,9 @@ export async function downloadElementAsPdf(
 
     const safeName = fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`
     pdf.save(safeName)
+  } catch (err) {
+    console.warn("Direct PDF generation failed, launching native print/PDF engine:", err)
+    await printElement(elementId, { paperSize })
   } finally {
     if (document.body.contains(clone)) {
       document.body.removeChild(clone)
