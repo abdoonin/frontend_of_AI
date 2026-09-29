@@ -355,23 +355,26 @@ export function ClinicalNoteBuilder({
           </Label>
 
           {/* Liver Signs Bar */}
-          <div className="rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] p-3 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] p-3.5 space-y-3 shadow-xs">
+            <div className="space-y-2.5">
               {/* Jaundice */}
-              <div>
-                <Label className="text-[11px] font-medium text-[var(--ink-muted)] block mb-1">
-                  {t('Jaundice')}:
-                </Label>
-                <div className="grid grid-cols-4 gap-1 text-[11px]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 rounded-lg bg-[var(--surface-wide)] border border-[var(--line)]">
+                <div className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-amber-500 shrink-0" />
+                  <span className="text-xs font-semibold text-[var(--ink)]">
+                    {t('Jaundice')}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5 w-full sm:w-80 text-[11px]">
                   {['None', 'Mild', 'Moderate', 'Severe'].map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setJaundice(val)}
-                      className={`py-1 rounded border transition-all text-center ${
+                      className={`py-1.5 px-2 rounded-md font-medium transition-all text-center ${
                         jaundice === val
-                          ? 'bg-[var(--accent)] text-[var(--ink)] font-bold border-[var(--accent)]'
-                          : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)]'
+                          ? 'bg-[var(--accent)] text-[var(--ink)] font-bold shadow-xs border border-[var(--accent)]'
+                          : 'bg-[var(--surface)] hover:bg-[var(--surface-strong)] text-[var(--ink-muted)] border border-[var(--line-strong)]'
                       }`}
                     >
                       {t(val)}
@@ -381,20 +384,23 @@ export function ClinicalNoteBuilder({
               </div>
 
               {/* Ascites */}
-              <div>
-                <Label className="text-[11px] font-medium text-[var(--ink-muted)] block mb-1">
-                  {t('Ascites')}:
-                </Label>
-                <div className="grid grid-cols-4 gap-1 text-[11px]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 rounded-lg bg-[var(--surface-wide)] border border-[var(--line)]">
+                <div className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-sky-500 shrink-0" />
+                  <span className="text-xs font-semibold text-[var(--ink)]">
+                    {t('Ascites')}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5 w-full sm:w-80 text-[11px]">
                   {['None', 'Mild', 'Moderate', 'Severe'].map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setAscites(val)}
-                      className={`py-1 rounded border transition-all text-center ${
+                      className={`py-1.5 px-2 rounded-md font-medium transition-all text-center ${
                         ascites === val
-                          ? 'bg-[var(--accent)] text-[var(--ink)] font-bold border-[var(--accent)]'
-                          : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)]'
+                          ? 'bg-[var(--accent)] text-[var(--ink)] font-bold shadow-xs border border-[var(--accent)]'
+                          : 'bg-[var(--surface)] hover:bg-[var(--surface-strong)] text-[var(--ink-muted)] border border-[var(--line-strong)]'
                       }`}
                     >
                       {t(val)}
@@ -404,20 +410,23 @@ export function ClinicalNoteBuilder({
               </div>
 
               {/* Lower Limb Edema */}
-              <div>
-                <Label className="text-[11px] font-medium text-[var(--ink-muted)] block mb-1">
-                  {t('Lower Limb Edema')}:
-                </Label>
-                <div className="grid grid-cols-4 gap-1 text-[11px]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 rounded-lg bg-[var(--surface-wide)] border border-[var(--line)]">
+                <div className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-indigo-500 shrink-0" />
+                  <span className="text-xs font-semibold text-[var(--ink)]">
+                    {t('Lower Limb Edema')}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5 w-full sm:w-80 text-[11px]">
                   {['None', 'Mild', 'Moderate', 'Severe'].map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setEdema(val)}
-                      className={`py-1 rounded border transition-all text-center ${
+                      className={`py-1.5 px-2 rounded-md font-medium transition-all text-center ${
                         edema === val
-                          ? 'bg-[var(--accent)] text-[var(--ink)] font-bold border-[var(--accent)]'
-                          : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)]'
+                          ? 'bg-[var(--accent)] text-[var(--ink)] font-bold shadow-xs border border-[var(--accent)]'
+                          : 'bg-[var(--surface)] hover:bg-[var(--surface-strong)] text-[var(--ink-muted)] border border-[var(--line-strong)]'
                       }`}
                     >
                       {t(val)}
@@ -428,58 +437,63 @@ export function ClinicalNoteBuilder({
             </div>
 
             {/* Organomegaly & Stigmata Toggles */}
-            <div className="flex flex-wrap gap-2 pt-1 border-t border-[var(--line-strong)]">
-              <button
-                type="button"
-                onClick={() => setHepatomegaly(!hepatomegaly)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-                  hepatomegaly
-                    ? 'bg-[var(--caution)] text-black font-semibold border-[var(--caution)]'
-                    : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)]'
-                }`}
-              >
-                {hepatomegaly ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
-                {t('Hepatomegaly')}
-              </button>
+            <div className="pt-2 border-t border-[var(--line-strong)]">
+              <span className="text-[11px] font-semibold text-[var(--ink-muted)] block mb-2">
+                {t('Liver Stigmata & Signs')}:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setHepatomegaly(!hepatomegaly)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    hepatomegaly
+                      ? 'bg-[var(--caution)] text-black font-semibold border-[var(--caution)]'
+                      : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)] hover:border-[var(--accent)]'
+                  }`}
+                >
+                  {hepatomegaly ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
+                  {t('Hepatomegaly')}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setSplenomegaly(!splenomegaly)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-                  splenomegaly
-                    ? 'bg-[var(--caution)] text-black font-semibold border-[var(--caution)]'
-                    : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)]'
-                }`}
-              >
-                {splenomegaly ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
-                {t('Splenomegaly')}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setSplenomegaly(!splenomegaly)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    splenomegaly
+                      ? 'bg-[var(--caution)] text-black font-semibold border-[var(--caution)]'
+                      : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)] hover:border-[var(--accent)]'
+                  }`}
+                >
+                  {splenomegaly ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
+                  {t('Splenomegaly')}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setSpiderAngioma(!spiderAngioma)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-                  spiderAngioma
-                    ? 'bg-[var(--critical)] text-white font-semibold border-[var(--critical)]'
-                    : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)]'
-                }`}
-              >
-                {spiderAngioma ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
-                {t('Spider Angiomas')}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setSpiderAngioma(!spiderAngioma)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    spiderAngioma
+                      ? 'bg-[var(--critical)] text-white font-semibold border-[var(--critical)]'
+                      : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)] hover:border-[var(--accent)]'
+                  }`}
+                >
+                  {spiderAngioma ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
+                  {t('Spider Angiomas')}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setAsterixis(!asterixis)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-                  asterixis
-                    ? 'bg-[var(--critical)] text-white font-semibold border-[var(--critical)]'
-                    : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)]'
-                }`}
-              >
-                {asterixis ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
-                {t('Asterixis (Flap)')}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setAsterixis(!asterixis)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    asterixis
+                      ? 'bg-[var(--critical)] text-white font-semibold border-[var(--critical)]'
+                      : 'bg-[var(--surface-wide)] border-[var(--line-strong)] text-[var(--ink-muted)] hover:border-[var(--accent)]'
+                  }`}
+                >
+                  {asterixis ? <Check className="size-3.5 stroke-[3]" /> : <Plus className="size-3.5" />}
+                  {t('Asterixis (Flap)')}
+                </button>
+              </div>
             </div>
           </div>
 

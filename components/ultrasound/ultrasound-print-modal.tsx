@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { format } from 'date-fns'
 import {
   Dialog,
@@ -9,8 +10,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Printer, Download } from 'lucide-react'
+import { Printer, Download, Loader2 } from 'lucide-react'
 import { UltrasoundExam, getFibrosisInfo, getSteatosisInfo } from '@/lib/api/ultrasound'
+import { printElement, downloadElementAsPdf } from '@/lib/print-service'
 
 interface UltrasoundPrintModalProps {
   open: boolean
@@ -27,13 +29,35 @@ export function UltrasoundPrintModal({
   patientName,
   patientCode,
 }: UltrasoundPrintModalProps) {
+  const [downloading, setDownloading] = useState(false)
+  const [printing, setPrinting] = useState(false)
+
   if (!exam) return null
 
   const fibrosis = getFibrosisInfo(exam.fibroscan_kpa)
   const steatosis = getSteatosisInfo(exam.fibroscan_cap)
 
-  const handlePrint = () => {
-    window.print()
+  const handlePrint = async () => {
+    try {
+      setPrinting(true)
+      await printElement('ultrasound-report-sheet', {
+        title: `Ultrasound Report - ${patientName}`,
+      })
+    } catch (e) {
+      window.print()
+    } finally {
+      setPrinting(false)
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true)
+      const fileName = `Ultrasound_Report_${patientName.replace(/\s+/g, '_')}_${exam.exam_date || 'exam'}.pdf`
+      await downloadElementAsPdf('ultrasound-report-sheet', fileName)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   return (
@@ -45,8 +69,19 @@ export function UltrasoundPrintModal({
               Ultrasound & Imaging Clinical Report
             </DialogTitle>
             <div className="flex gap-2">
-              <Button size="sm" onClick={handlePrint} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
-                <Printer className="h-4 w-4" /> Print / Export PDF
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                className="gap-1.5 text-xs border-emerald-600/30 text-emerald-700 hover:bg-emerald-50"
+              >
+                {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {downloading ? 'Saving PDF...' : 'Download PDF'}
+              </Button>
+              <Button size="sm" onClick={handlePrint} disabled={printing} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs">
+                {printing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+                {printing ? 'Preparing...' : 'Print Report'}
               </Button>
             </div>
           </div>

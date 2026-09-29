@@ -204,6 +204,7 @@ export function PatientProfile({
   patientId: string
   back?: BackTarget
 }) {
+  const { isRtl, t } = useLanguage()
   const [patient, setPatient] = useState<Patient | null>(null)
   const [visits, setVisits] = useState<Visit[]>([])
   const [loading, setLoading] = useState(true)
@@ -393,7 +394,6 @@ export function PatientProfile({
             ? { text: `Cancer risk ${latest.cancerRiskPct}%`, tone: 'var(--caution)' }
             : { text: 'Assessed', tone: 'var(--ink-muted)' }
 
-  const { isRtl, t } = useLanguage()
   const BackIcon = isRtl ? ArrowRight : ArrowLeft
 
   const identity = [

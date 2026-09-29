@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Printer, Calendar, Building2, UserCheck } from 'lucide-react'
+import { Printer, Download, Loader2, Calendar, Building2, UserCheck } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   formatIQD,
@@ -16,6 +17,7 @@ import {
   type BillingRecord,
   type BillingSummary,
 } from '@/lib/api/billing'
+import { printElement, downloadElementAsPdf } from '@/lib/print-service'
 
 interface DailyClosingModalProps {
   open: boolean
@@ -32,10 +34,32 @@ export function DailyClosingModal({
   summary,
   bills,
 }: DailyClosingModalProps) {
+  const [downloading, setDownloading] = useState(false)
+  const [printing, setPrinting] = useState(false)
+
   if (!summary) return null
 
-  const handlePrint = () => {
-    window.print()
+  const handlePrint = async () => {
+    try {
+      setPrinting(true)
+      await printElement('daily-closing-sheet', {
+        title: `Closing Statement - ${date}`,
+      })
+    } catch (e) {
+      window.print()
+    } finally {
+      setPrinting(false)
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true)
+      const fileName = `Daily_Closing_Settlement_${date}.pdf`
+      await downloadElementAsPdf('daily-closing-sheet', fileName)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   const formattedDate = date
@@ -49,13 +73,27 @@ export function DailyClosingModal({
           <DialogTitle className="text-base font-bold text-gray-900">
             Clinic Daily Closing Statement (Shift Settlement)
           </DialogTitle>
-          <Button
-            size="sm"
-            onClick={handlePrint}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-8 text-xs font-semibold"
-          >
-            <Printer className="h-3.5 w-3.5" /> Print Settlement Sheet
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+              className="gap-1.5 h-8 text-xs font-semibold border-emerald-600/30 text-emerald-700 hover:bg-emerald-50"
+            >
+              {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              {downloading ? 'PDF...' : 'PDF'}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePrint}
+              disabled={printing}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-8 text-xs font-semibold"
+            >
+              {printing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
+              {printing ? 'Preparing...' : 'Print'}
+            </Button>
+          </div>
         </DialogHeader>
 
         {/* Printable Shift Sheet */}

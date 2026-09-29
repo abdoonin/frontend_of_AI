@@ -10,6 +10,7 @@ import {
   Sparkles,
   CheckCircle2,
   Pill,
+  RotateCcw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,6 +35,7 @@ import {
 } from "@/lib/api/prescriptions"
 import { listPatients, type PatientRecord } from "@/lib/api/patients"
 import { useLanguage } from "@/lib/language-context"
+import { toastSuccess, toastError } from "@/components/common/toast-notifications"
 import { PrescriptionPrintModal } from "./prescription-print-modal"
 
 interface PrescriptionBuilderProps {
@@ -49,7 +51,7 @@ export function PrescriptionBuilder({
   initialDiagnosis = "",
   onSuccess,
 }: PrescriptionBuilderProps) {
-  const { t, isRtl } = useLanguage()
+  const { t } = useLanguage()
   const [patients, setPatients] = useState<PatientRecord[]>([])
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
     initialPatientId || null
@@ -104,7 +106,9 @@ export function PrescriptionBuilder({
         ...it,
       }))
     )
-    setNotes(`Treatment protocol: ${protocol.name_en}\n* Strict avoidance of NSAIDs (Ibuprofen, Diclofenac).\n* Low-sodium, low-fat dietary compliance.`)
+    setNotes(
+      `Treatment protocol: ${protocol.name_en}\n* Strict avoidance of NSAIDs (Ibuprofen, Diclofenac).\n* Low-sodium, low-fat dietary compliance.`
+    )
   }
 
   // Handle drug selection in a row
@@ -119,7 +123,12 @@ export function PrescriptionBuilder({
         generic_name: med.generic_name,
         dose: med.default_dose || "1 tablet",
         frequency: med.default_freq || "QD (Once daily)",
-        timing: med.timing === "before_meal" ? "Before meals" : (med.timing === "after_meal" ? "After meals" : "With meals"),
+        timing:
+          med.timing === "before_meal"
+            ? "30 min before meals"
+            : med.timing === "after_meal"
+            ? "After meals"
+            : "With meals",
         instructions_ar: med.notes_ar || "",
       }
     } else {
@@ -154,18 +163,39 @@ export function PrescriptionBuilder({
     setItems(items.filter((_, i) => i !== index))
   }
 
+  const handleResetForm = () => {
+    setSavedPrescription(null)
+    setDiagnosis(initialDiagnosis || "")
+    setNotes("")
+    setFollowUpDate("After 2 weeks")
+    setItems([
+      {
+        medication_name: "",
+        generic_name: "",
+        dose: "250mg",
+        frequency: "BID (Twice daily)",
+        timing: "After meals",
+        duration: "1 month",
+        instructions_ar: "Take with plenty of water after meals",
+      },
+    ])
+    setErrorMsg(null)
+  }
+
   const currentPatient = patients.find((p) => p.id === selectedPatientId)
 
   // Save Prescription
   const handleSave = async (andPrint = false) => {
     if (!selectedPatientId) {
       setErrorMsg("Please select a patient first")
+      toastError("Please select a patient first")
       return
     }
 
     const validItems = items.filter((it) => it.medication_name.trim().length > 0)
     if (validItems.length === 0) {
       setErrorMsg("Please add at least one medication to the prescription")
+      toastError("Please add at least one medication")
       return
     }
 
@@ -201,6 +231,10 @@ export function PrescriptionBuilder({
 
       setSavedPrescription(previewRx)
 
+      toastSuccess("Prescription saved successfully!", {
+        description: `Prescription #${res.prescription_number} has been recorded in the medical chart.`,
+      })
+
       if (onSuccess) {
         onSuccess(res.prescription_id)
       }
@@ -209,7 +243,9 @@ export function PrescriptionBuilder({
         setPrintModalOpen(true)
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to save prescription")
+      const msg = err.message || "Failed to save prescription"
+      setErrorMsg(msg)
+      toastError(msg)
     } finally {
       setSaving(false)
     }
@@ -217,22 +253,62 @@ export function PrescriptionBuilder({
 
   return (
     <div className="space-y-6">
+      {/* Prominent Success Notification Banner */}
+      {savedPrescription && (
+        <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-emerald-600 text-white shrink-0 shadow-sm">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm">Prescription Saved Successfully!</span>
+                <Badge variant="outline" className="text-xs bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-400/50 font-mono">
+                  #{savedPrescription.prescription_number}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Saved for {savedPrescription.patient_name}. The prescription is ready for review or printing.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <Button
+              size="sm"
+              onClick={() => setPrintModalOpen(true)}
+              className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Print Prescription (Rx)
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleResetForm}
+              className="gap-1.5 text-xs border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100/50"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              New Rx
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Protocol Quick-Picks Card */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base font-semibold">{t("Standard Clinical Protocols")}</CardTitle>
+              <CardTitle className="text-base font-semibold">Standard Clinical Protocols</CardTitle>
             </div>
             <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-              {isRtl ? "قوالب سريعة" : "1-Click Templates"}
+              1-Click Templates
             </Badge>
           </div>
           <CardDescription className="text-xs">
-            {isRtl
-              ? "اختر بروتوكولاً سريرياً معتمداً لتعبئة الأدوية والجرعات واحتياطات السلامة تلقائياً:"
-              : "Select a verified clinical protocol to auto-fill proven medications, dosages, and safety precautions:"}
+            Select a verified clinical protocol to auto-fill proven medications, dosages, and safety precautions:
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -258,12 +334,12 @@ export function PrescriptionBuilder({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Pill className="h-5 w-5 text-emerald-600" />
-              <CardTitle className="text-lg font-bold">{t("New Prescription (Rx)")}</CardTitle>
+              <CardTitle className="text-lg font-bold">New Prescription (Rx)</CardTitle>
             </div>
             {savedPrescription && (
               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                {isRtl ? `تم حفظ الوصفة #${savedPrescription.prescription_number}` : `Prescription #${savedPrescription.prescription_number} Saved`}
+                Prescription #{savedPrescription.prescription_number} Saved
               </Badge>
             )}
           </div>
@@ -280,7 +356,7 @@ export function PrescriptionBuilder({
           {/* Patient Selector and Diagnosis Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-semibold">{isRtl ? "اختر المريض *" : "Select Patient *"}</Label>
+              <Label className="text-xs font-semibold">Select Patient *</Label>
               {initialPatientId ? (
                 <div className="p-2.5 rounded-lg border bg-muted/30 text-sm font-medium">
                   {initialPatientName || `Patient #${initialPatientId}`}
@@ -291,7 +367,7 @@ export function PrescriptionBuilder({
                   onValueChange={(val) => setSelectedPatientId(Number(val))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={isRtl ? "اختر المريض من قاعدة البيانات..." : "Choose patient from database..."} />
+                    <SelectValue placeholder="Choose patient from database..." />
                   </SelectTrigger>
                   <SelectContent>
                     {patients.map((p) => (
@@ -305,7 +381,7 @@ export function PrescriptionBuilder({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold">{t("Diagnosis / Clinical Indication")}</Label>
+              <Label className="text-xs font-semibold">Diagnosis / Clinical Indication</Label>
               <Input
                 placeholder="e.g. Non-Alcoholic Fatty Liver Disease (Grade II)"
                 value={diagnosis}
@@ -320,12 +396,12 @@ export function PrescriptionBuilder({
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b pb-2">
               <Label className="text-sm font-bold flex items-center gap-2">
-                <span>{t("Prescribed Medications")}</span>
-                <span className="text-xs font-normal text-muted-foreground">({items.length} {isRtl ? "أدوية" : "items"})</span>
+                <span>Prescribed Medications</span>
+                <span className="text-xs font-normal text-muted-foreground">({items.length} items)</span>
               </Label>
               <Button onClick={addItemRow} size="sm" variant="outline" className="gap-1.5 text-xs">
                 <Plus className="h-3.5 w-3.5" />
-                {t("Add Medication")}
+                Add Medication
               </Button>
             </div>
 
@@ -343,14 +419,14 @@ export function PrescriptionBuilder({
                     {/* Row 1: Drug Name + Quick Select + Dose + Delete */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                       <div className="md:col-span-4 space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">{isRtl ? "الاسم التجاري / الدواء" : "Trade Name / Formulary"}</Label>
+                        <Label className="text-[11px] text-muted-foreground">Trade Name / Formulary</Label>
                         <div className="flex gap-1.5">
                           <Select
                             value={matchedMed?.trade_name || ""}
                             onValueChange={(val) => handleSelectMedication(index, val)}
                           >
                             <SelectTrigger className="w-[140px] text-xs">
-                              <SelectValue placeholder={isRtl ? "الدليل" : "Formulary"} />
+                              <SelectValue placeholder="Formulary" />
                             </SelectTrigger>
                             <SelectContent>
                               {medicationsList.map((m) => (
@@ -372,7 +448,7 @@ export function PrescriptionBuilder({
                       </div>
 
                       <div className="md:col-span-3 space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">{isRtl ? "الاسم العلمي" : "Generic Name"}</Label>
+                        <Label className="text-[11px] text-muted-foreground">Generic Name</Label>
                         <Input
                           placeholder="Generic name"
                           value={item.generic_name || ""}
@@ -383,7 +459,7 @@ export function PrescriptionBuilder({
                       </div>
 
                       <div className="md:col-span-2 space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">{t("Dosage")}</Label>
+                        <Label className="text-[11px] text-muted-foreground">Dosage</Label>
                         <Input
                           placeholder="250mg"
                           value={item.dose}
@@ -394,7 +470,7 @@ export function PrescriptionBuilder({
                       </div>
 
                       <div className="md:col-span-2 space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">{t("Frequency")}</Label>
+                        <Label className="text-[11px] text-muted-foreground">Frequency</Label>
                         <Select
                           value={item.frequency}
                           onValueChange={(val) => updateItemField(index, "frequency", val)}
@@ -428,7 +504,7 @@ export function PrescriptionBuilder({
                     {/* Row 2: Timing + Duration + Instructions */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-1 border-t border-dashed border-border/50 text-xs">
                       <div className="md:col-span-3 space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">{isRtl ? "توقيت الوجبات" : "Meal Timing"}</Label>
+                        <Label className="text-[11px] text-muted-foreground">Meal Timing</Label>
                         <Select
                           value={item.timing || "After meals"}
                           onValueChange={(val) => updateItemField(index, "timing", val)}
@@ -437,16 +513,16 @@ export function PrescriptionBuilder({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="30 min before meals">{isRtl ? "قبل الأكل بنصف ساعة" : "30 min before meals"}</SelectItem>
-                            <SelectItem value="After meals">{isRtl ? "بعد الأكل" : "After meals"}</SelectItem>
-                            <SelectItem value="With meals">{isRtl ? "مع الأكل" : "With meals"}</SelectItem>
-                            <SelectItem value="Bedtime">{isRtl ? "عند النوم" : "Bedtime"}</SelectItem>
+                            <SelectItem value="30 min before meals">30 min before meals</SelectItem>
+                            <SelectItem value="After meals">After meals</SelectItem>
+                            <SelectItem value="With meals">With meals</SelectItem>
+                            <SelectItem value="Bedtime">Bedtime</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="md:col-span-2 space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">{t("Duration")}</Label>
+                        <Label className="text-[11px] text-muted-foreground">Duration</Label>
                         <Input
                           placeholder="1 month / 14 days"
                           value={item.duration || ""}
@@ -457,12 +533,13 @@ export function PrescriptionBuilder({
                       </div>
 
                       <div className="md:col-span-7 space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">{t("Special Instructions")}</Label>
+                        <Label className="text-[11px] text-muted-foreground">Special Instructions</Label>
                         <Input
-                          placeholder={isRtl ? "مثال: يُؤخذ مع كوب ماء كبير بعد الطعام" : "e.g. Take with a large glass of water after food"}
+                          placeholder="e.g. Take with a large glass of water after food"
                           value={item.instructions_ar || ""}
                           onChange={(e) => updateItemField(index, "instructions_ar", e.target.value)}
                           className="text-xs"
+                          dir="ltr"
                         />
                       </div>
                     </div>
@@ -471,7 +548,7 @@ export function PrescriptionBuilder({
                     {matchedMed?.liver_warning && (
                       <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] flex items-center gap-1.5">
                         <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
-                        <span><strong>{isRtl ? "تحذير سريري خاص بسلامة الكبد: " : "Clinical Liver Warning: "}</strong>{matchedMed.liver_warning}</span>
+                        <span><strong>Clinical Liver Warning: </strong>{matchedMed.liver_warning}</span>
                       </div>
                     )}
                   </div>
@@ -484,7 +561,7 @@ export function PrescriptionBuilder({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold">{t("Next Follow-Up Visit Date:")}</Label>
+                <Label className="text-xs font-semibold">Next Follow-Up Visit Date:</Label>
                 <div className="flex gap-1">
                   {["After 2 weeks", "After 1 month", "After 2 months"].map((time) => (
                     <button
@@ -493,7 +570,7 @@ export function PrescriptionBuilder({
                       onClick={() => setFollowUpDate(time)}
                       className="text-[10px] px-2 py-0.5 rounded bg-muted hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
                     >
-                      {isRtl ? (time === "After 2 weeks" ? "بعد أسبوعين" : time === "After 1 month" ? "بعد شهر" : "بعد شهرين") : time}
+                      {time}
                     </button>
                   ))}
                 </div>
@@ -507,12 +584,12 @@ export function PrescriptionBuilder({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold">{isRtl ? "نصائح الحمية والنمط المعيشي" : "Dietary & Lifestyle Advice"}</Label>
+              <Label className="text-xs font-semibold">Dietary & Lifestyle Advice</Label>
               <Textarea
                 rows={2}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder={isRtl ? "تعليمات الغذاء، تقليل الملح، ممارسة الرياضة..." : "Dietary instructions, salt restrictions, physical exercise..."}
+                placeholder="Dietary instructions, salt restrictions, physical exercise..."
                 className="text-xs resize-none"
               />
             </div>
@@ -521,7 +598,7 @@ export function PrescriptionBuilder({
           {/* Actions Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t">
             <div className="text-xs text-muted-foreground">
-              {isRtl ? "* تُحفظ الوصفات مباشرة في السجل الطبي للمريض." : "* Prescriptions are saved directly to the patient's medical record."}
+              * Prescriptions are saved directly to the patient's medical record.
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -532,7 +609,7 @@ export function PrescriptionBuilder({
                 className="flex-1 sm:flex-none gap-2 text-xs"
               >
                 <Save className="h-4 w-4" />
-                {saving ? t("Saving...") : (isRtl ? "حفظ فقط" : "Save Only")}
+                {saving ? "Saving..." : "Save Only"}
               </Button>
 
               <Button
@@ -541,7 +618,7 @@ export function PrescriptionBuilder({
                 className="flex-1 sm:flex-none gap-2 text-xs gradient-primary"
               >
                 <Printer className="h-4 w-4" />
-                {saving ? t("Saving...") : (isRtl ? "حفظ ومعاينة الطباعة (Rx)" : "Save & Preview Print (Rx)")}
+                {saving ? "Saving..." : "Save & Preview Print (Rx)"}
               </Button>
             </div>
           </div>

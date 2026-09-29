@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -9,9 +10,10 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Printer, CheckCircle2, Clock, Building2 } from 'lucide-react'
+import { Printer, Download, Loader2, CheckCircle2, Clock, Building2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { formatIQD, VISIT_TYPE_CONFIGS, type BillingRecord } from '@/lib/api/billing'
+import { printElement, downloadElementAsPdf } from '@/lib/print-service'
 
 interface ReceiptPrintModalProps {
   open: boolean
@@ -24,10 +26,32 @@ export function ReceiptPrintModal({
   onOpenChange,
   bill,
 }: ReceiptPrintModalProps) {
+  const [downloading, setDownloading] = useState(false)
+  const [printing, setPrinting] = useState(false)
+
   if (!bill) return null
 
-  const handlePrint = () => {
-    window.print()
+  const handlePrint = async () => {
+    try {
+      setPrinting(true)
+      await printElement('patient-receipt-sheet', {
+        title: `Receipt - ${bill.bill_number} - ${bill.patient_name}`,
+      })
+    } catch (e) {
+      window.print()
+    } finally {
+      setPrinting(false)
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true)
+      const fileName = `Receipt_${bill.bill_number}_${bill.patient_name.replace(/\s+/g, '_')}.pdf`
+      await downloadElementAsPdf('patient-receipt-sheet', fileName)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   const visitConfig = VISIT_TYPE_CONFIGS[bill.visit_type] || {
@@ -42,13 +66,27 @@ export function ReceiptPrintModal({
           <DialogTitle className="text-base font-bold text-gray-900">
             Official Patient Receipt & Invoice
           </DialogTitle>
-          <Button
-            size="sm"
-            onClick={handlePrint}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-8 text-xs font-semibold"
-          >
-            <Printer className="h-3.5 w-3.5" /> Print Receipt
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+              className="gap-1.5 h-8 text-xs font-semibold border-emerald-600/30 text-emerald-700 hover:bg-emerald-50"
+            >
+              {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              {downloading ? 'PDF...' : 'PDF'}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePrint}
+              disabled={printing}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-8 text-xs font-semibold"
+            >
+              {printing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
+              {printing ? 'Preparing...' : 'Print'}
+            </Button>
+          </div>
         </DialogHeader>
 
         {/* Printable Receipt Paper */}

@@ -670,36 +670,85 @@ body:is(.dark *)::before {
 }
 
 /* ─────────────────────────────────────────────────────────
-   Print Styles for E-Prescriptions & Reports
+   Print Styles for E-Prescriptions, Ultrasound & Invoices
+   Guarantees 1-page clean printing with no UI artifacts
    ───────────────────────────────────────────────────────── */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide the underlying app shell and all its chrome */
+  body > *:not([data-radix-portal]) {
+    display: none !important;
+  }
+
+  /* When a modal is open, strip the modal wrapper styling */
+  [data-radix-portal] {
+    position: static !important;
+    inset: auto !important;
+  }
+
+  [data-radix-portal] > div[class*="fixed"] {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide modal overlay backdrop and close buttons */
+  div[data-state][class*="bg-black"],
+  div[data-state][class*="inset-0"],
   .no-print,
   aside,
   nav,
+  header.no-print,
+  footer.no-print,
   button:not(.allow-print) {
     display: none !important;
   }
 
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  #printable-rx {
+  /* Target all printable document sheets */
+  #printable-rx,
+  #ultrasound-report-sheet,
+  #patient-receipt-sheet,
+  #daily-closing-sheet {
+    display: block !important;
+    position: relative !important;
     box-shadow: none !important;
     border: none !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding: 8mm !important;
+    padding: 0 !important;
     margin: 0 auto !important;
-  }
-
-  @page {
-    margin: 8mm;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
   }
 }
+
 
